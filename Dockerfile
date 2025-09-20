@@ -1,0 +1,3 @@
+FROM postgres:17
+ENV POSTGRES_PASSWORD=Much4sGr4c14sP4l3rm0
+ENV POSTGRES_DB=red_social
