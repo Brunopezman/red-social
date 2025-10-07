@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  postgres:
+    build: .
+    container_name: red_social_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./init-db:/docker-entrypoint-initdb.d
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: Much4sGr4c14sP4l3rm0
+      POSTGRES_DB: red_social 
