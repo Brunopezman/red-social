@@ -1,0 +1,8 @@
+1) docker compose up -d
+
+
+2) Ejecutar:
+    a) Como usuario normal: docker exec -it red_social_db psql -U app_user -d red_social
+    b) Como admin: docker exec -it red_social_db psql -U app_admin -d red_social
+    c) Como superusuario (PostgresSQL interno): docker exec -it red_social_db psql -U admin -d red_social
+
