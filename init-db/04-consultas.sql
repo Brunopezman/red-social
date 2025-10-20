@@ -19,11 +19,11 @@ INSERT INTO Usuarios (
 
 -- Listar todos los usuarios de la red social.
 SELECT
-    u.id_usuario,
-    u.username,
-    u.nombre,
-    u.apellido,
-    u.pais
+    id_usuario,
+    username,
+    nombre,
+    apellido,
+    pais
 FROM Usuarios;
 
 -- Listar todas las amistades de la red social.

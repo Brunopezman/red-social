@@ -34,21 +34,21 @@ CREATE TABLE IF NOT EXISTS Publicaciones(
 );
 
 CREATE TABLE IF NOT EXISTS Imagenes(
-    id_imagen INT PRIMARY KEY AUTO_INCREMENT,
+    id_imagen SERIAL PRIMARY KEY,
     id_publicacion INT NOT NULL,
     url_imagen VARCHAR(200) NOT NULL CHECK (url_imagen LIKE 'http%'),
     FOREIGN KEY (id_publicacion) REFERENCES Publicaciones(id_publicacion) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS Textos(
-    id_texto INT PRIMARY KEY AUTO_INCREMENT,
+CREATE TABLE IF NOT EXISTS Textos (
+    id_texto SERIAL PRIMARY KEY,
     id_publicacion INT NOT NULL,
     texto TEXT NOT NULL,
     FOREIGN KEY (id_publicacion) REFERENCES Publicaciones(id_publicacion) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS Videos(
-    id_video INT PRIMARY KEY AUTO_INCREMENT,
+CREATE TABLE IF NOT EXISTS Videos (
+    id_video SERIAL PRIMARY KEY,
     id_publicacion INT NOT NULL,
     url_video VARCHAR(200) NOT NULL CHECK (url_video LIKE 'http%'),
     duracion INT NOT NULL CHECK (duracion > 0),
