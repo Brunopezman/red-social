@@ -87,6 +87,65 @@ CREATE POLICY fav_delete_own ON Favoritos FOR DELETE USING (id_usuario = (SELECT
 -- Políticas para USUARIOS (Para permitir que un usuario se elimine a sí mismo)
 CREATE POLICY user_select_all ON Usuarios FOR SELECT USING (TRUE);
 CREATE POLICY user_delete_own ON Usuarios FOR DELETE USING (id_usuario = (SELECT id_usuario FROM Usuarios WHERE username = CURRENT_USER));
+
+CREATE POLICY ug_select_own
+  ON public.usuarios_grupos
+  FOR SELECT TO user_role
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.usuarios u
+      WHERE u.id_usuario = public.usuarios_grupos.id_usuario
+        AND u.username   = CURRENT_USER
+    )
+  );
+
+CREATE POLICY ug_insert_own
+  ON public.usuarios_grupos
+  FOR INSERT TO user_role
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM public.usuarios u
+      WHERE u.id_usuario = public.usuarios_grupos.id_usuario
+        AND u.username   = CURRENT_USER
+    )
+  );
+
+-- Permitir que cada uno se BORRE a sí mismo del grupo
+CREATE POLICY ug_delete_own
+  ON public.usuarios_grupos
+  FOR DELETE TO user_role
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.usuarios u
+      WHERE u.id_usuario = public.usuarios_grupos.id_usuario
+        AND u.username   = CURRENT_USER
+    )
+  );
+
+CREATE POLICY noti_select_own ON public.notificaciones
+  FOR SELECT TO user_role
+  USING (EXISTS (SELECT 1 FROM public.usuarios u WHERE u.id_usuario = public.notificaciones.id_usuario AND u.username = CURRENT_ROLE));
+
+CREATE POLICY noti_insert_own ON public.notificaciones
+  FOR INSERT TO user_role
+  WITH CHECK (EXISTS (SELECT 1 FROM public.usuarios u WHERE u.id_usuario = public.notificaciones.id_usuario AND u.username = CURRENT_ROLE));
+
+CREATE POLICY noti_select_own
+  ON public.notificaciones
+  FOR SELECT TO user_role
+  USING (
+    EXISTS (SELECT 1 FROM public.usuarios u
+            WHERE u.id_usuario = public.notificaciones.id_usuario
+              AND u.username   = CURRENT_ROLE)
+  );
+
+CREATE POLICY noti_insert_admin ON Notificaciones
+  FOR INSERT TO admin_role
+  WITH CHECK (TRUE);
+
+CREATE POLICY noti_select_admin ON Notificaciones
+  FOR SELECT TO admin_role
+  USING (TRUE);
 -- ===========================
 -- Asegurarse de que futuras tablas tengan permisos automáticos
 -- ===========================
