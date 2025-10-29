@@ -1,3 +1,79 @@
+-- Triggers
+CREATE TRIGGER insertar_publicacion_texto
+BEFORE INSERT ON Textos
+FOR EACH ROW
+BEGIN
+  INSERT INTO Publicaciones (id_publicacion, id_usuario, contenido)
+  VALUES (NEW.id_publicacion, 1, NEW.texto);
+END;
+
+CREATE TRIGGER actualizar_publicacion_texto
+AFTER UPDATE ON Textos
+FOR EACH ROW
+BEGIN
+  UPDATE Publicaciones
+  SET contenido = NEW.texto
+  WHERE id_publicacion = NEW.id_publicacion;
+END;
+
+CREATE TRIGGER eliminar_publicacion_texto
+BEFORE DELETE ON Textos
+FOR EACH ROW
+BEGIN
+  DELETE FROM Publicaciones
+  WHERE id_publicacion = OLD.id_publicacion;
+END;
+
+CREATE TRIGGER insertar_publicacion_imagen
+BEFORE INSERT ON Imagenes
+FOR EACH ROW
+BEGIN
+  INSERT INTO Publicaciones (id_publicacion, id_usuario, contenido, url)
+  VALUES (NEW.id_publicacion, 1, 'Imagen publicada', NEW.url_imagen);
+END;
+
+CREATE TRIGGER actualizar_publicacion_imagen
+AFTER UPDATE ON Imagenes
+FOR EACH ROW
+BEGIN
+  UPDATE Publicaciones
+  SET url = NEW.url_imagen
+  WHERE id_publicacion = NEW.id_publicacion;
+END;
+
+CREATE TRIGGER eliminar_publicacion_imagen
+BEFORE DELETE ON Imagenes
+FOR EACH ROW
+BEGIN
+  DELETE FROM Publicaciones
+  WHERE id_publicacion = OLD.id_publicacion;
+END;
+
+CREATE TRIGGER insertar_publicacion_video
+BEFORE INSERT ON Videos
+FOR EACH ROW
+BEGIN
+  INSERT INTO Publicaciones (id_publicacion, id_usuario, contenido, url)
+  VALUES (NEW.id_publicacion, 1, 'Video publicado', NEW.url_video);
+END;
+
+CREATE TRIGGER actualizar_publicacion_video
+AFTER UPDATE ON Videos
+FOR EACH ROW
+BEGIN
+  UPDATE Publicaciones
+  SET url = NEW.url_video
+  WHERE id_publicacion = NEW.id_publicacion;
+END;
+
+CREATE TRIGGER eliminar_publicacion_video
+BEFORE DELETE ON Videos
+FOR EACH ROW
+BEGIN
+  DELETE FROM Publicaciones
+  WHERE id_publicacion = OLD.id_publicacion;
+END;
+
 -- Registrar un usuario.
 INSERT INTO Usuarios (
     id_usuario,
@@ -68,52 +144,34 @@ GROUP BY pais
 ORDER BY cantidad_usuarios DESC;
 
 -- Realizar una publicación (dar un ejemplo de cada tipo).
-INSERT INTO Publicaciones (id_publicacion, id_usuario, contenido)
-VALUES (1, 2, '¡Hola a todos! Esta es mi primera publicación en la red.');
 INSERT INTO Textos (id_publicacion, texto)
 VALUES (1, '¡Hola a todos! Esta es mi primera publicación en la red.');
 
-INSERT INTO Publicaciones (id_publicacion, id_usuario, contenido, url)
-VALUES (2, 3, 'Foto de mis vacaciones en la playa', 'http://example.com/playa.jpg');
 INSERT INTO Imagenes (id_publicacion, url_imagen)
 VALUES (2, 'http://example.com/playa.jpg');
 
-INSERT INTO Publicaciones (id_publicacion, id_usuario, contenido, url)
-VALUES (3, 4, 'Video del concierto de anoche', 'http://example.com/concierto.mp4');
 INSERT INTO Videos (id_publicacion, url_video, duracion, calidad)
 VALUES (3, 'http://example.com/concierto.mp4', 240, '1080p');
 
 -- Actualizar una publicación (dar un ejemplo de cada tipo).
-UPDATE Publicaciones
-SET contenido = '¡Actualización! Agrego más detalles sobre mi día.'
-WHERE id_publicacion = 1;
 UPDATE Textos
 SET texto = '¡Actualización! Agrego más detalles sobre mi día.'
 WHERE id_publicacion = 1;
 
-UPDATE Publicaciones
-SET contenido = 'Nueva foto del atardecer en la playa', url = 'http://example.com/atardecer.jpg'
-WHERE id_publicacion = 2;
 UPDATE Imagenes
 SET url_imagen = 'http://example.com/atardecer.jpg'
 WHERE id_publicacion = 2;
 
-UPDATE Publicaciones
-SET contenido = 'Versión extendida del concierto', url = 'http://example.com/concierto_full.mp4'
-WHERE id_publicacion = 3;
 UPDATE Videos
 SET url_video = 'http://example.com/concierto_full.mp4', duracion = 360, calidad = '4K'
 WHERE id_publicacion = 3;
 
 -- Eliminar una publicación (dar un ejemplo de cada tipo).
 DELETE FROM Textos WHERE id_publicacion = 1;
-DELETE FROM Publicaciones WHERE id_publicacion = 1;
 
 DELETE FROM Imagenes WHERE id_publicacion = 2;
-DELETE FROM Publicaciones WHERE id_publicacion = 2;
 
 DELETE FROM Videos WHERE id_publicacion = 3;
-DELETE FROM Publicaciones WHERE id_publicacion = 3;
 
 -- Desregistrar a un usuario de la aplicación (dar un ejemplo).
 DELETE FROM Usuarios WHERE id_usuario = 1;
