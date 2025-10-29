@@ -2,13 +2,11 @@
 INSERT INTO Usuarios (id_usuario, username, email, fecha_de_nacimiento, nombre, apellido, pais)
 VALUES (22, 'milamantilla', 'milanesa@gmail.com', '2003-02-17', 'Mila', 'Nesa', 'Argentina');
 
-
 CREATE USER milamantilla WITH LOGIN PASSWORD 'securepass123';
-GRANT user_role TO milamantilla;
-
+GRANT user_rol TO milamantilla;
 
 CREATE USER admin_app WITH LOGIN PASSWORD 'adminpass123';
-GRANT admin_role TO admin_app;
+GRANT admin_rol TO admin_app;
 
 SET ROLE milamantilla;
 SELECT id_usuario, username
