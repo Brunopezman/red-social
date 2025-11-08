@@ -12,7 +12,7 @@ GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO admin_role;
 GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO admin_role;
 
 -- ===========================
--- Permisos para app_user
+-- Permisos para user_role
 -- ===========================
 GRANT USAGE ON SCHEMA public TO user_role;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO user_role;
@@ -20,18 +20,16 @@ GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO user_role;
 -- Permisos de LECTURA (SELECT) en todas las tablas.
 -- La seguridad de qué filas puede ver se controla con RLS.
 GRANT SELECT ON ALL TABLES IN SCHEMA public TO user_role;
-GRANT USAGE ON SCHEMA public TO user_role;
-GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO user_role;
 -- Permisos de ESCRITURA (INSERT)
-GRANT INSERT ON public.Publicaciones, Grupos, Usuarios_Grupos, Mensajes, Amistades, Comentarios, Favoritos TO user_role;
+GRANT INSERT ON Publicaciones, Imagenes, Videos, Textos, Grupos, Mensajes, Amistades, Comentarios, Favoritos TO user_role;
 
 -- Permisos de MODIFICACIÓN (UPDATE)
 -- El usuario solo podrá actualizar sus propias publicaciones, comentarios, etc. (controlado por RLS)
-GRANT UPDATE ON Publicaciones, Comentarios, Mensajes TO user_role;
+GRANT UPDATE ON Publicaciones, Imagenes, Videos, Textos, Comentarios, Mensajes TO user_role;
 
 -- Permisos de BORRADO (DELETE)
 -- El usuario solo podrá borrar su propio contenido (controlado por RLS)
-GRANT DELETE ON Publicaciones, Comentarios, Mensajes, Favoritos, Usuarios_Grupos, Amistades, Usuarios TO user_role;
+GRANT DELETE ON Publicaciones, Imagenes, Videos, Textos, Comentarios, Mensajes, Favoritos, Usuarios_Grupos, Amistades, Usuarios TO user_role;
 
 -- =====================================================================
 -- 4. ACTIVACIÓN DE SEGURIDAD A NIVEL DE FILA (ROW-LEVEL SECURITY - RLS)
@@ -146,6 +144,7 @@ CREATE POLICY noti_insert_admin ON Notificaciones
 CREATE POLICY noti_select_admin ON Notificaciones
   FOR SELECT TO admin_role
   USING (TRUE);
+
 -- ===========================
 -- Asegurarse de que futuras tablas tengan permisos automáticos
 -- ===========================
