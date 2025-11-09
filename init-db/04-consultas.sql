@@ -7,8 +7,8 @@ CREATE OR REPLACE FUNCTION insertar_publicacion_texto_func()
 RETURNS TRIGGER AS $$
 BEGIN
     -- Crea una Publicacion usando el texto y el id_usuario del registro nuevo (NEW)
-    INSERT INTO Publicaciones (id_publicacion, id_usuario)
-    VALUES (NEW.id_publicacion, NEW.id_usuario); 
+    INSERT INTO Publicaciones (id_publicacion, id_usuario, id_grupo)
+    VALUES (NEW.id_publicacion, NEW.id_usuario, NEW.id_grupo); 
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -23,8 +23,8 @@ CREATE OR REPLACE FUNCTION insertar_publicacion_imagen_func()
 RETURNS TRIGGER AS $$
 BEGIN
     -- Crea una Publicacion usando 'Imagen publicada' como contenido y la URL de la imagen (NEW)
-    INSERT INTO Publicaciones (id_publicacion, id_usuario, url)
-    VALUES (NEW.id_publicacion, NEW.id_usuario, NEW.url_imagen);
+    INSERT INTO Publicaciones (id_publicacion, id_usuario, id_grupo)
+    VALUES (NEW.id_publicacion, NEW.id_usuario, NEW.id_grupo);
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -39,8 +39,8 @@ CREATE OR REPLACE FUNCTION insertar_publicacion_video_func()
 RETURNS TRIGGER AS $$
 BEGIN
     -- Crea una Publicacion usando 'Video publicado' como contenido y la URL del video (NEW)
-    INSERT INTO Publicaciones (id_publicacion, id_usuario, contenido, url)
-    VALUES (NEW.id_publicacion, NEW.id_usuario, NEW.url_video);
+    INSERT INTO Publicaciones (id_publicacion, id_usuario, id_grupo)
+    VALUES (NEW.id_publicacion, NEW.id_usuario, NEW.id_grupo);
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -49,46 +49,6 @@ CREATE TRIGGER insertar_publicacion_video
 BEFORE INSERT ON Videos
 FOR EACH ROW
 EXECUTE FUNCTION insertar_publicacion_video_func();
-
--- Triggers para updates que llaman a la misma funcion
-CREATE OR REPLACE FUNCTION actualizar_publicacion_func()
-RETURNS TRIGGER AS $$
-BEGIN
-    -- El valor a actualizar depende de qué tabla disparó el trigger.
-    IF TG_TABLE_NAME = 'textos' THEN
-        -- Actualiza solo el contenido
-        UPDATE Publicaciones
-        WHERE id_publicacion = NEW.id_publicacion;
-    ELSIF TG_TABLE_NAME = 'imagenes' THEN
-        -- Actualiza solo la URL
-        UPDATE Publicaciones
-        SET url = NEW.url_imagen
-        WHERE id_publicacion = NEW.id_publicacion;
-    ELSIF TG_TABLE_NAME = 'videos' THEN
-        -- Actualiza solo la URL
-        UPDATE Publicaciones
-        SET url = NEW.url_video
-        WHERE id_publicacion = NEW.id_publicacion;
-    END IF;
-    
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER actualizar_publicacion_texto
-AFTER UPDATE ON Textos
-FOR EACH ROW
-EXECUTE FUNCTION actualizar_publicacion_func();
-
-CREATE TRIGGER actualizar_publicacion_imagen
-AFTER UPDATE ON Imagenes
-FOR EACH ROW
-EXECUTE FUNCTION actualizar_publicacion_func();
-
-CREATE TRIGGER actualizar_publicacion_video
-AFTER UPDATE ON Videos
-FOR EACH ROW
-EXECUTE FUNCTION actualizar_publicacion_func();
 
 -- Triggers para DELETES que llaman a la misma funcion 
 CREATE OR REPLACE FUNCTION eliminar_publicacion_func()
@@ -125,7 +85,7 @@ EXECUTE FUNCTION eliminar_publicacion_func();
 
 -- Registrar un usuario.
 INSERT INTO Usuarios (id_usuario, username, email, fecha_de_nacimiento, nombre, apellido, pais) VALUES
-(6, 'Manu', 'Manuelpato@mail.com', '1995-02-15', 'Manuel', 'Pato', 'Argentina'),
+(7, 'Valen', 'valentinoceniceros@gmail.com', '2001-11-11', 'Valentino', 'Ceniceros', 'Argentina');
 
 -- Listar todos los usuarios de la red social.
 SELECT
@@ -159,11 +119,11 @@ FROM Usuarios u
 WHERE u.id_usuario IN (
     SELECT
         CASE
-            WHEN a.id_usuario1 = 2 THEN a.id_usuario2
+            WHEN a.id_usuario1 = CURRENT_USER THEN a.id_usuario2
             ELSE a.id_usuario1
         END AS amigo_id
     FROM Amistades a
-    WHERE 2 IN (a.id_usuario1, a.id_usuario2)
+    WHERE CURRENT_USER IN (a.id_usuario1, a.id_usuario2)
 );
 
 -- Listar todos los mensajes de la red social.

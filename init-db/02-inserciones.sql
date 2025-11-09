@@ -19,7 +19,7 @@ INSERT INTO Amistades (id_usuario1, id_usuario2) VALUES
 (3, 5); -- David y Felipe
 
 INSERT INTO Grupos (id_grupo, nombre_grupo, descripcion) VALUES
-(101, 'Amantes del Cine', 'Discusión y reseñas de películas'),
+(101, 'Ricoteros', 'Fundamentalistas del aire acondicionado'),
 (102, 'Programadores LATAM', 'Consultas y tips de código');
 
 INSERT INTO Usuarios_Grupos (id_usuario, id_grupo) VALUES

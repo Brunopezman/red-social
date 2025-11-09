@@ -4,9 +4,9 @@ INSERT INTO Paises(nombre_pais) VALUES
 ('Bolivia'),('Peru'),('Colombia'),('Ecuador'),('Venezuela');
 
 INSERT INTO Usuarios (id_usuario, username, email, fecha_de_nacimiento, nombre, apellido, pais)
-VALUES (1, 'milamantilla', 'milanesa@gmail.com', '2003-02-17', 'Mila', 'Mantilla', 'Argentina');
+VALUES (10, 'milamantilla', 'milanesa@gmail.com', '2003-02-17', 'Mila', 'Mantilla', 'Argentina');
 INSERT INTO Usuarios (id_usuario, username, email, fecha_de_nacimiento, nombre, apellido, pais)
-VALUES (2, 'mjuarez', 'mjuarez@gmail.com', '2003-05-22', 'Manuel', 'Juarez', 'Brasil');
+VALUES (20, 'mpato', 'mpato@gmail.com', '2003-05-22', 'Manuel', 'Pato', 'Colombia');
 
 -- Asigno roles
 CREATE USER milamantilla WITH LOGIN PASSWORD 'securepass123';
@@ -19,10 +19,13 @@ GRANT user_role TO mjuarez;
 SET ROLE milamantilla;
 SELECT id_usuario, username
 FROM usuarios
-WHERE username = current_role;
+WHERE username = CURRENT_USER;
+
+INSERT INTO Imagenes (id_publicacion, id_usuario, url_imagen)
+VALUES (10, 10, 'http://post11.com');
 
 INSERT INTO Imagenes (id_publicacion, id_usuario, id_grupo, url_imagen)
-VALUES (999, 1, NULL, 'http://post11.com');
+VALUES (11, 10, 101, 'http://sandunga.com');
 
 -- Siendo un usuario no puedo publicar con el id de otro usuario
 INSERT INTO Imagenes (id_publicacion, id_usuario, id_grupo, url_imagen)
@@ -44,7 +47,10 @@ DELETE FROM Imagenes WHERE id_publicacion = 999;
 UPDATE Imagenes SET url_imagen = 'http://post404.com'
 WHERE id_publicacion = (SELECT id_publicacion FROM Imagenes WHERE id_usuario = 2 LIMIT 1);
 
--- Le mando un mensaje a mjuarez
+-- Le mando amistad a pato
+INSERT INTO Amistades (id_usuario1, id_usuario2) VALUES (10, 20);
+
+-- Le mando un mensaje a mpato
 INSERT INTO Mensajes (id_mensaje, id_usuario_emisor, id_usuario_receptor, contenido)
 VALUES (10, 1, 2, 'Hola mjuarez, soy milamantilla');
 

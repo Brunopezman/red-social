@@ -35,8 +35,7 @@ GRANT DELETE ON Publicaciones, Imagenes, Videos, Textos, Comentarios, Mensajes, 
 -- 4. ACTIVACIÓN DE SEGURIDAD A NIVEL DE FILA (ROW-LEVEL SECURITY - RLS)
 -- Se activa RLS en las tablas que contienen datos privados de los usuarios.
 -- =====================================================================
-ALTER TABLE public.publicaciones ENABLE ROW LEVEL SECURITY;
---ALTER TABLE Publicaciones ENABLE ROW LEVEL SECURITY;
+ALTER TABLE Publicaciones ENABLE ROW LEVEL SECURITY;
 ALTER TABLE Mensajes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE Comentarios ENABLE ROW LEVEL SECURITY;
 ALTER TABLE Favoritos ENABLE ROW LEVEL SECURITY;
@@ -64,6 +63,30 @@ CREATE POLICY pub_insert_own ON public.Publicaciones FOR INSERT TO user_role
 CREATE POLICY pub_update_own ON public.Publicaciones FOR UPDATE USING (id_usuario = (SELECT id_usuario FROM Usuarios WHERE username = CURRENT_USER));
 CREATE POLICY pub_delete_own ON public.Publicaciones FOR DELETE USING (id_usuario = (SELECT id_usuario FROM Usuarios WHERE username = CURRENT_USER));
 
+-- Politicas para AMISTADES
+CREATE POLICY am_insert_own
+  ON public.amistades
+  FOR INSERT TO user_role
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM public.usuarios u
+      WHERE u.username = CURRENT_ROLE
+        AND (u.id_usuario = public.amistades.id_usuario1
+             OR u.id_usuario = public.amistades.id_usuario2)
+    )
+  );
+  
+CREATE POLICY am_delete_own
+  ON public.amistades
+  FOR DELETE TO user_role
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.usuarios u
+      WHERE u.username = CURRENT_ROLE
+        AND (u.id_usuario = public.amistades.id_usuario1
+             OR u.id_usuario = public.amistades.id_usuario2)
+    )
+  );
 -- Políticas para MENSAJES
 CREATE POLICY msg_select_own ON Mensajes FOR SELECT USING (
     id_usuario_emisor = (SELECT id_usuario FROM Usuarios WHERE username = CURRENT_USER) OR
