@@ -12,7 +12,7 @@ GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO admin_role;
 GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO admin_role;
 
 -- ===========================
--- Permisos para app_user
+-- Permisos para user_role
 -- ===========================
 GRANT USAGE ON SCHEMA public TO user_role;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO user_role;
@@ -20,25 +20,22 @@ GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO user_role;
 -- Permisos de LECTURA (SELECT) en todas las tablas.
 -- La seguridad de qué filas puede ver se controla con RLS.
 GRANT SELECT ON ALL TABLES IN SCHEMA public TO user_role;
-GRANT USAGE ON SCHEMA public TO user_role;
-GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO user_role;
 -- Permisos de ESCRITURA (INSERT)
-GRANT INSERT ON public.Publicaciones, Grupos, Usuarios_Grupos, Mensajes, Amistades, Comentarios, Favoritos TO user_role;
+GRANT INSERT ON Publicaciones, Imagenes, Videos, Textos, Grupos, Mensajes, Amistades, Comentarios, Favoritos TO user_role;
 
 -- Permisos de MODIFICACIÓN (UPDATE)
 -- El usuario solo podrá actualizar sus propias publicaciones, comentarios, etc. (controlado por RLS)
-GRANT UPDATE ON Publicaciones, Comentarios, Mensajes TO user_role;
+GRANT UPDATE ON Publicaciones, Imagenes, Videos, Textos, Comentarios, Mensajes TO user_role;
 
 -- Permisos de BORRADO (DELETE)
 -- El usuario solo podrá borrar su propio contenido (controlado por RLS)
-GRANT DELETE ON Publicaciones, Comentarios, Mensajes, Favoritos, Usuarios_Grupos, Amistades, Usuarios TO user_role;
+GRANT DELETE ON Publicaciones, Imagenes, Videos, Textos, Comentarios, Mensajes, Favoritos, Usuarios_Grupos, Amistades, Usuarios TO user_role;
 
 -- =====================================================================
 -- 4. ACTIVACIÓN DE SEGURIDAD A NIVEL DE FILA (ROW-LEVEL SECURITY - RLS)
 -- Se activa RLS en las tablas que contienen datos privados de los usuarios.
 -- =====================================================================
-ALTER TABLE public.publicaciones ENABLE ROW LEVEL SECURITY;
---ALTER TABLE Publicaciones ENABLE ROW LEVEL SECURITY;
+ALTER TABLE Publicaciones ENABLE ROW LEVEL SECURITY;
 ALTER TABLE Mensajes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE Comentarios ENABLE ROW LEVEL SECURITY;
 ALTER TABLE Favoritos ENABLE ROW LEVEL SECURITY;
@@ -66,6 +63,30 @@ CREATE POLICY pub_insert_own ON public.Publicaciones FOR INSERT TO user_role
 CREATE POLICY pub_update_own ON public.Publicaciones FOR UPDATE USING (id_usuario = (SELECT id_usuario FROM Usuarios WHERE username = CURRENT_USER));
 CREATE POLICY pub_delete_own ON public.Publicaciones FOR DELETE USING (id_usuario = (SELECT id_usuario FROM Usuarios WHERE username = CURRENT_USER));
 
+-- Politicas para AMISTADES
+CREATE POLICY am_insert_own
+  ON public.amistades
+  FOR INSERT TO user_role
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM public.usuarios u
+      WHERE u.username = CURRENT_ROLE
+        AND (u.id_usuario = public.amistades.id_usuario1
+             OR u.id_usuario = public.amistades.id_usuario2)
+    )
+  );
+  
+CREATE POLICY am_delete_own
+  ON public.amistades
+  FOR DELETE TO user_role
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.usuarios u
+      WHERE u.username = CURRENT_ROLE
+        AND (u.id_usuario = public.amistades.id_usuario1
+             OR u.id_usuario = public.amistades.id_usuario2)
+    )
+  );
 -- Políticas para MENSAJES
 CREATE POLICY msg_select_own ON Mensajes FOR SELECT USING (
     id_usuario_emisor = (SELECT id_usuario FROM Usuarios WHERE username = CURRENT_USER) OR
@@ -146,6 +167,7 @@ CREATE POLICY noti_insert_admin ON Notificaciones
 CREATE POLICY noti_select_admin ON Notificaciones
   FOR SELECT TO admin_role
   USING (TRUE);
+
 -- ===========================
 -- Asegurarse de que futuras tablas tengan permisos automáticos
 -- ===========================

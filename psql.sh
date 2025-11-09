@@ -13,7 +13,7 @@ IMAGE_NAME="red_social_db"
 
 # Roles y contraseñas para mostrar al usuario
 declare -A ROLES
-ROLES=( ["admin_user"]="Much4sGr4c14sP4l3rm0" ["app_user"]="app_pass" ["readonly_user"]="readonly_pass" )
+ROLES=( ["admin_user"]="Much4sGr4c14sP4l3rm0" ["user_role"]="user123")
 
 # ===========================
 # Construir la imagen Docker
@@ -70,8 +70,7 @@ echo "==============================="
 echo ""
 echo "Ejemplos para conectarse:"
 echo " - Como admin: docker exec -it $CONTAINER_NAME psql -U admin_user -d $POSTGRES_DB"
-echo " - Como app: docker exec -it $CONTAINER_NAME psql -U app_user -d $POSTGRES_DB"
-echo " - Como readonly: docker exec -it $CONTAINER_NAME psql -U readonly_user -d $POSTGRES_DB"
+echo " - Como usuario: docker exec -it $CONTAINER_NAME psql -U user_role -d $POSTGRES_DB"
 echo ""
 
 # ===========================
