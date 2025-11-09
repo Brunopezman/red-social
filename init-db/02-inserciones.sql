@@ -1,27 +1,94 @@
-INSERT INTO Pais (nombre_pais) VALUES
-('Argentina'), ('Colombia'), ('Peru'), ('Chile'), ('México'), ('España'),
-('Uruguay'), ('Paraguay'), ('Bolivia'), ('Venezuela'), ('Brasil'),
-('Nicaragua'), ('Ecuador'), ('Guatemala'), ('Honduras'), ('El Salvador'),
-('Costa Rica'), ('Panamá'), ('República Dominicana');
+INSERT INTO Paises (nombre_pais) VALUES
+('Argentina'),
+('Chile'),
+('Mexico'),
+('España'),
+('Colombia');
 
-INSERT INTO Usuarios (id_usuario, username, email, fecha_de_nacimiento, nombre, apellido, pais, cantidad_de_ingresos) VALUES
-(1, 'mjuarez', 'mjuarez@gmail.com', '1990-05-15', 'Martín', 'Juárez', 'Nicaragua', 5),
-(2, 'lcastro', 'lcastro@gmail.com', '1985-03-22', 'Lucía', 'Castro', 'Argentina', 12),
-(3, 'farias', 'farias@gmail.com', '1992-07-10', 'Federico', 'Arias', 'Argentina', 3),
-(4, 'cdominguez', 'cdominguez@gmail.com', '1988-11-30', 'Carla', 'Domínguez', 'Argentina', 8),
-(5, 'agomez', 'agomez@gmail.com', '1995-01-05', 'Agustina', 'Gómez', 'Argentina', 0),
-(6, 'lsanchez', 'lsanchez@gmail.com', '1993-09-17', 'Luciano', 'Sanchez', 'Argentina', 6),
-(7, 'jdasilva', 'jdasilva@gmail.com', '1980-06-25', 'Joao', 'Da Silva', 'Brasil', 15),
-(8, 'rfernandez', 'rfernandez@gmail.com', '1991-04-12', 'Romina', 'Fernández', 'Argentina', 2),
-(9, 'dtorres', 'dtorres@gmail.com', '1987-08-19', 'Diego', 'Torres', 'Argentina', 9),
-(10, 'mramirez', 'mramirez@gmail.com', '1996-12-03', 'María', 'Ramírez', 'Colombia', 1),
-(11, 'ncastillo', 'ncastillo@gmail.com', '1994-02-28', 'Nicolás', 'Castillo', 'Argentina', 4),
-(12, 'fhernandez', 'fhernandez@gmail.com', '1989-10-07', 'Florencia', 'Hernández', 'España', 7),
-(13, 'ealvarez', 'ealvarez@gmail.com', '1990-03-15', 'Ezequiel', 'Álvarez', 'Argentina', 0),
-(14, 'gromero', 'gromero@gmail.com', '1986-07-21', 'Gabriela', 'Romero', 'Paraguay', 11),
-(15, 'psanchez', 'psanchez@gmail.com', '1997-05-09', 'Pablo', 'Sánchez', 'Argentina', 3),
-(16, 'jnavarro', 'jnavarro@gmail.com', '1992-01-30', 'Jimena', 'Navarro', 'Bolivia', 6),
-(17, 'lvaldez', 'lvaldez@gmail.com', '1984-09-14', 'Leandro', 'Valdez', 'Ecuador', 13),
-(18, 'hcastillo', 'hcastillo@gmail.com', '1993-06-18', 'Hernán', 'Castillo', 'Peru', 2),
-(19, 'ysilva', 'ysilva@gmail.com', '1981-12-25', 'Yanina', 'Silva', 'Colombia', 10),
-(20, 'rvera', 'rvera@gmail.com', '1995-08-01', 'Rodrigo', 'Vera', 'Venezuela', 1);
+INSERT INTO Usuarios (id_usuario, username, email, fecha_de_nacimiento, nombre, apellido, pais) VALUES
+(1, 'bruno', 'brunopezman@mail.com', '1995-07-15', 'Bruno', 'Pezman', 'Argentina'),
+(2, 'carla', 'carlalopez@mail.com', '1998-03-20', 'Carla', 'Lopez', 'Chile'),
+(3, 'david', 'davidgomez@mail.com', '1990-11-05', 'David', 'Gomez', 'Mexico'),
+(4, 'elena', 'elenasanchez@mail.com', '2001-01-25', 'Elena', 'Sanchez', 'España'),
+(5, 'felipe', 'felipediaz@mail.com', '1985-09-10', 'Felipe', 'Diaz', 'Colombia');
+
+INSERT INTO Amistades (id_usuario1, id_usuario2) VALUES
+(1, 2), -- Bruno y Carla
+(1, 3), -- Bruno y David
+(2, 4), -- Carla y Elena
+(3, 5); -- David y Felipe
+
+INSERT INTO Grupos (id_grupo, nombre_grupo, descripcion) VALUES
+(101, 'Ricoteros', 'Fundamentalistas del aire acondicionado'),
+(102, 'Programadores LATAM', 'Consultas y tips de código');
+
+INSERT INTO Usuarios_Grupos (id_usuario, id_grupo) VALUES
+(1, 101),
+(2, 101),
+(3, 102),
+(4, 102),
+(5, 101);
+
+-- ID 1
+INSERT INTO Textos (id_publicacion, id_usuario, texto)
+VALUES (1, 1, '¡Hola a todos! Probando mi primera publicación de texto.');
+
+-- ID 2
+INSERT INTO Textos (id_publicacion, id_usuario, id_grupo, texto)
+VALUES (2, 2, 101, '¿Alguien vio la nueva película de ciencia ficción? Recomendaciones...');
+
+-- ID 3
+INSERT INTO Imagenes (id_publicacion, id_usuario, url_imagen)
+VALUES (3, 3, 'http://imagenes.com/mi_escritorio.jpg');
+
+-- ID 4
+INSERT INTO Imagenes (id_publicacion, id_usuario, id_grupo, url_imagen)
+VALUES (4, 4, 102, 'http://imagenes.com/diagrama_db.png');
+
+-- ID 5
+INSERT INTO Videos (id_publicacion, id_usuario, url_video, duracion, calidad)
+VALUES (5, 5, 'http://videos.com/receta_express.mp4', 180, '720p');
+
+-- ID 6
+INSERT INTO Videos (id_publicacion, id_usuario, url_video, duracion, calidad)
+VALUES (6, 1, 'http://videos.com/viaje_sur.mp4', 600, '1080p');
+
+INSERT INTO Favoritos (id_usuario, id_publicacion) VALUES
+(2, 1),
+(3, 1), -- Publicación 1 (Texto de Bruno): 3 favoritos
+(4, 1),
+(1, 3),
+(2, 3), -- Publicación 3 (Imagen de David): 2 favoritos
+(5, 5); -- Publicación 5 (Video de Felipe): 1 favorito
+
+INSERT INTO Comentarios (id_comentario, id_publicacion, id_usuario, contenido) VALUES
+(1, 1, 2, '¡Excelente post, Bruno!'),
+(2, 3, 1, 'Genial la foto.'),
+(3, 5, 2, 'Buena receta, voy a probarla.'),
+(4, 5, 4, 'Me encanta el 720p, buena calidad.');
+
+INSERT INTO Mensajes (id_mensaje, id_usuario_emisor, id_usuario_receptor, estado, contenido) VALUES
+(1, 1, 2, 'leido', 'Hola Carla, ¿cómo estás?'),
+(2, 2, 1, 'no_leido', '¡Hola Bruno! Todo bien, ¿y tú?'),
+(3, 3, 4, 'leido', 'Revisa el código que te envié.'),
+(4, 4, 3, 'no_leido', 'Lo reviso ahora, gracias.');
+
+INSERT INTO Notificaciones (id_notificacion, id_usuario) VALUES
+(10, 1), -- Para Bruno
+(11, 1), -- Para Bruno
+(12, 3), -- Para David
+(13, 4); -- Para Elena
+
+INSERT INTO Notificaciones_Amistad (id_notificacion, id_usuario_solicitante, estado) VALUES
+(10, 2, 'pendiente');
+
+-- Notificación 11: Like (para Bruno)
+INSERT INTO Notificaciones_Publicacion (id_notificacion, id_usuario_publicador, id_publicacion, tipo) VALUES
+(11, 3, 1, 'like');
+
+-- Notificación 12: Comentario (para David)
+INSERT INTO Notificaciones_Publicacion (id_notificacion, id_usuario_publicador, id_publicacion, tipo) VALUES
+(12, 2, 3, 'comentario');
+
+INSERT INTO Notificaciones_Grupo (id_notificacion, id_grupo, mensaje) VALUES
+(13, 102, '¡Nueva reunión de programadores el próximo viernes!');

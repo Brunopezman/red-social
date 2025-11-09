@@ -10,5 +10,5 @@ services:
       - ./init-db:/docker-entrypoint-initdb.d
     environment:
       POSTGRES_USER: admin
-      POSTGRES_PASSWORD: Much4sGr4c14sP4l3rm0
-      POSTGRES_DB: red_social 
+      POSTGRES_PASSWORD: Much4s Gr4c14sP4l3rm0
+      POSTGRES_DB: red_social  
