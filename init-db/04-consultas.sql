@@ -2,17 +2,6 @@
 -- TRIGGERS
 -- ===========================
 
--- Trigger para insertar Texto
-CREATE OR REPLACE FUNCTION insertar_publicacion_texto_func()
-RETURNS TRIGGER AS $$
-BEGIN
-    -- Crea una Publicacion usando el texto y el id_usuario del registro nuevo (NEW)
-    INSERT INTO Publicaciones (id_publicacion, id_usuario, id_grupo)
-    VALUES (NEW.id_publicacion, NEW.id_usuario, NEW.id_grupo); 
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
 -- Trigger para verificar notificaciones de amistad
 CREATE OR REPLACE FUNCTION verificar_notificacion_amistad()
 RETURNS TRIGGER AS $$
@@ -36,12 +25,50 @@ RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
-
 CREATE TRIGGER antes_insertar_amistad
 BEFORE INSERT ON Amistades
 FOR EACH ROW
 EXECUTE FUNCTION verificar_notificacion_amistad();
 
+-- Trigger para evitar amistades duplicadas
+CREATE OR REPLACE FUNCTION normalizar_amistad()
+RETURNS TRIGGER AS $$
+DECLARE
+    -- Declaramos la variable temporal DENTRO del cuerpo principal de la función
+    temp_id INT; 
+BEGIN
+    -- 1. Verificar si la relación está en orden inverso (Ej: INSERT (20, 10))
+    IF NEW.id_usuario1 > NEW.id_usuario2 THEN
+        
+        -- 2. Realizar el intercambio de valores
+        temp_id := NEW.id_usuario1;
+        NEW.id_usuario1 := NEW.id_usuario2;
+        NEW.id_usuario2 := temp_id;
+    RAISE EXCEPTION 'Ya existe una amistad entre ambos usuarios';    
+    END IF;
+    
+    -- 3. Si la relación ya existe (ej: (10, 20)), 
+    -- la clave primaria lanzará el error al intentar insertar (10, 20) nuevamente.
+    
+    RETURN NEW; -- Devolver la nueva fila (posiblemente normalizada)
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER tr_normalizar_amistad
+BEFORE INSERT ON Amistades
+FOR EACH ROW
+EXECUTE FUNCTION normalizar_amistad();
+
+-- Trigger para insertar Texto
+CREATE OR REPLACE FUNCTION insertar_publicacion_texto_func()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Crea una Publicacion usando el texto y el id_usuario del registro nuevo (NEW)
+    INSERT INTO Publicaciones (id_publicacion, id_usuario, id_grupo)
+    VALUES (NEW.id_publicacion, NEW.id_usuario, NEW.id_grupo); 
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
 CREATE TRIGGER insertar_publicacion_texto
 BEFORE INSERT ON Textos
@@ -109,7 +136,101 @@ BEFORE DELETE ON Videos
 FOR EACH ROW
 EXECUTE FUNCTION eliminar_publicacion_func();
 
+-- Triggers para notificaciones
+CREATE OR REPLACE FUNCTION notificaciones_amistad_trigger()
+RETURNS TRIGGER AS $$
+DECLARE
+    v_id_evento INT;
+BEGIN
+    -- 1. Crear el evento único
+    INSERT INTO Eventos_Notificacion (tipo_evento)
+    VALUES ('amistad')
+    RETURNING id_evento INTO v_id_evento; -- Capturar el ID generado
 
+    -- 2. Asignar ese ID a la fila hija
+    NEW.id_evento := v_id_evento;
+
+    -- 3. Crear la alerta individual (1:1)
+    INSERT INTO Notificaciones (id_usuario, id_evento)
+    VALUES (NEW.id_usuario_receptor, v_id_evento);
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER tr_insert_notificaciones_amistad
+BEFORE INSERT ON Notificaciones_Amistad
+FOR EACH ROW
+EXECUTE FUNCTION notificaciones_amistad_trigger();
+
+CREATE OR REPLACE FUNCTION notificaciones_publicacion_trigger()
+RETURNS TRIGGER AS $$
+DECLARE
+    v_id_evento INT;
+    v_id_usuario_receptor INT;
+BEGIN
+    -- 1. Crear el evento único
+    INSERT INTO Eventos_Notificacion (tipo_evento)
+    VALUES ('publicacion')
+    RETURNING id_evento INTO v_id_evento; -- Capturar el ID generado
+
+    -- 2. Asignar ese ID a la fila hija
+    NEW.id_evento := v_id_evento;
+
+    -- 3. Obtener el ID del usuario receptor (Dueño de la publicación)
+    -- Asumiendo que la tabla Publicaciones tiene el id_usuario del creador
+    SELECT id_usuario INTO v_id_usuario_receptor
+    FROM Publicaciones
+    WHERE id_publicacion = NEW.id_publicacion;
+    
+    -- 4. Crear la alerta individual (1:1)
+    INSERT INTO Notificaciones (id_usuario, id_evento)
+    VALUES (v_id_usuario_receptor, v_id_evento);
+
+    -- 5. Permitir que la inserción en la tabla de detalles proceda
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER tr_insert_notificaciones_publicacion
+BEFORE INSERT ON Notificaciones_Publicacion
+FOR EACH ROW
+EXECUTE FUNCTION notificaciones_publicacion_trigger();
+
+
+CREATE OR REPLACE FUNCTION notificaciones_grupo_trigger()
+RETURNS TRIGGER AS $$
+DECLARE
+    v_id_evento INT;
+    miembro_id INT;
+BEGIN
+    -- 1. Crear el evento único
+    INSERT INTO Eventos_Notificacion (tipo_evento)
+    VALUES ('grupo')
+    RETURNING id_evento INTO v_id_evento;
+
+    -- 2. Asignar ese ID a la fila hija (detalles del grupo)
+    NEW.id_evento := v_id_evento;
+
+    -- 3. Crear múltiples alertas individuales (1:N)
+    FOR miembro_id IN
+        -- Asumiendo la tabla Usuarios_Grupos
+        SELECT id_usuario
+        FROM Usuarios_Grupos 
+        WHERE id_grupo = NEW.id_grupo
+    LOOP
+        INSERT INTO Notificaciones (id_usuario, id_evento)
+        VALUES (miembro_id, v_id_evento);
+    END LOOP;
+    
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER tr_insert_notificaciones_grupo
+BEFORE INSERT ON Notificaciones_Grupo
+FOR EACH ROW
+EXECUTE FUNCTION notificaciones_grupo_trigger();
 
 -- ===========================
 -- CONSULTAS

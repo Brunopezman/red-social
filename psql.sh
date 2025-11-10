@@ -5,7 +5,7 @@
 # ===========================
 CONTAINER_NAME="red_social_db"
 POSTGRES_USER="admin_user"
-POSTGRES_PASSWORD="Much4sGr4c14sP4l3rm0"
+POSTGRES_PASSWORD="admin123"
 POSTGRES_DB="red_social"
 VOLUME_NAME="red_social_data"
 INIT_DB_PATH="$(pwd)/init-db"
@@ -13,7 +13,7 @@ IMAGE_NAME="red_social_db"
 
 # Roles y contraseñas para mostrar al usuario
 declare -A ROLES
-ROLES=( ["admin_user"]="Much4sGr4c14sP4l3rm0" ["user_role"]="user123")
+ROLES=( ["admin_role"]="admin123" ["user_role"]="user123")
 
 # ===========================
 # Construir la imagen Docker
@@ -69,7 +69,7 @@ done
 echo "==============================="
 echo ""
 echo "Ejemplos para conectarse:"
-echo " - Como admin: docker exec -it $CONTAINER_NAME psql -U admin_user -d $POSTGRES_DB"
+echo " - Como admin: docker exec -it $CONTAINER_NAME psql -U admin_role -d $POSTGRES_DB"
 echo " - Como usuario: docker exec -it $CONTAINER_NAME psql -U user_role -d $POSTGRES_DB"
 echo ""
 
