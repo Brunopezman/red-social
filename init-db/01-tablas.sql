@@ -84,39 +84,46 @@ CREATE TABLE IF NOT EXISTS Amistades(
     FOREIGN KEY (id_usuario2) REFERENCES Usuarios(id_usuario) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS Eventos_Notificacion (
+    id_evento	SERIAL	PRIMARY KEY,
+    tipo_evento	VARCHAR(20)	NOT NULL CHECK (tipo_evento IN ('amistad', 'publicacion', 'grupo')),
+    fecha_creacion	TIMESTAMP	DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE IF NOT EXISTS Notificaciones(
-    id_notificacion INT PRIMARY KEY,
+    id_notificacion SERIAL PRIMARY KEY,
     id_usuario INT NOT NULL,
-    FOREIGN KEY (id_usuario) REFERENCES Usuarios(id_usuario) ON DELETE CASCADE
+    id_evento INT,
+    FOREIGN KEY (id_usuario) REFERENCES Usuarios(id_usuario) ON DELETE CASCADE,
+    FOREIGN KEY (id_evento) REFERENCES Eventos_Notificacion(id_evento) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS Notificaciones_Amistad(
-    id_notificacion INT PRIMARY KEY,
+    id_evento INT PRIMARY KEY,
     id_usuario_solicitante INT NOT NULL,
     id_usuario_receptor INT NOT NULL,
     fecha_de_solicitud TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     estado VARCHAR(20) DEFAULT 'pendiente' CHECK (estado IN ('pendiente', 'aceptada', 'rechazada')),
-    FOREIGN KEY (id_notificacion) REFERENCES Notificaciones(id_notificacion) ON DELETE CASCADE,
+    FOREIGN KEY (id_evento) REFERENCES Eventos_Notificacion(id_evento) ON DELETE CASCADE,
     FOREIGN KEY (id_usuario_solicitante) REFERENCES Usuarios(id_usuario) ON DELETE CASCADE,
     FOREIGN KEY (id_usuario_receptor) REFERENCES Usuarios(id_usuario) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS Notificaciones_Publicacion(
-    id_notificacion INT PRIMARY KEY,
+    id_evento INT PRIMARY KEY,
     id_usuario_publicador INT NOT NULL,
     id_publicacion INT NOT NULL,
     tipo VARCHAR(20) NOT NULL CHECK (tipo IN ('like', 'comentario')),
-    FOREIGN KEY (id_notificacion) REFERENCES Notificaciones(id_notificacion) ON DELETE CASCADE,
+    FOREIGN KEY (id_evento) REFERENCES Eventos_Notificacion(id_evento) ON DELETE CASCADE,
     FOREIGN KEY (id_publicacion) REFERENCES Publicaciones(id_publicacion) ON DELETE CASCADE,
     FOREIGN KEY (id_usuario_publicador) REFERENCES Usuarios(id_usuario) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS Notificaciones_Grupo(
-    id_notificacion INT PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS Notificaciones_Grupo (
+    id_evento INT PRIMARY KEY,
     id_grupo INT NOT NULL,
     mensaje VARCHAR(300) NOT NULL,
-    FOREIGN KEY (id_notificacion) REFERENCES Notificaciones(id_notificacion) ON DELETE CASCADE,
-    FOREIGN KEY (id_grupo) REFERENCES Grupos(id_grupo) ON DELETE CASCADE
+    FOREIGN KEY (id_evento) REFERENCES Eventos_Notificacion(id_evento) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS Mensajes(

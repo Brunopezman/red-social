@@ -90,5 +90,5 @@ INSERT INTO Notificaciones_Publicacion (id_notificacion, id_usuario_publicador, 
 INSERT INTO Notificaciones_Publicacion (id_notificacion, id_usuario_publicador, id_publicacion, tipo) VALUES
 (12, 2, 3, 'comentario');
 
-INSERT INTO Notificaciones_Grupo (id_notificacion, id_grupo, mensaje) VALUES
-(13, 102, '¡Nueva reunión de programadores el próximo viernes!');
+INSERT INTO Notificaciones_Grupo (id_grupo, mensaje) VALUES
+(102, '¡Nueva reunión de programadores el próximo viernes!');

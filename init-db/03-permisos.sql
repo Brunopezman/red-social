@@ -1,8 +1,11 @@
 -- ===========================
 -- Crear roles/usuarios
 -- ===========================
-CREATE ROLE admin_role WITH NOLOGIN;
-CREATE ROLE user_role WITH NOLOGIN;
+-- Crea el rol de administrador con permisos para iniciar sesión y una contraseña
+CREATE ROLE admin_role WITH LOGIN PASSWORD 'admin123';
+
+-- Crea el rol de usuario con permisos para iniciar sesión y una contraseña
+CREATE ROLE user_role WITH LOGIN PASSWORD 'user123';
 
 -- ===========================
 -- Permisos para admin_user (full access)
@@ -171,5 +174,5 @@ CREATE POLICY noti_select_admin ON Notificaciones
 -- ===========================
 -- Asegurarse de que futuras tablas tengan permisos automáticos
 -- ===========================
---ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO user_role;
---ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO admin_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO user_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO admin_role;
