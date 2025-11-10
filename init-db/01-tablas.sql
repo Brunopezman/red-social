@@ -93,10 +93,12 @@ CREATE TABLE IF NOT EXISTS Notificaciones(
 CREATE TABLE IF NOT EXISTS Notificaciones_Amistad(
     id_notificacion INT PRIMARY KEY,
     id_usuario_solicitante INT NOT NULL,
+    id_usuario_receptor INT NOT NULL,
     fecha_de_solicitud TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     estado VARCHAR(20) DEFAULT 'pendiente' CHECK (estado IN ('pendiente', 'aceptada', 'rechazada')),
     FOREIGN KEY (id_notificacion) REFERENCES Notificaciones(id_notificacion) ON DELETE CASCADE,
-    FOREIGN KEY (id_usuario_solicitante) REFERENCES Usuarios(id_usuario) ON DELETE CASCADE
+    FOREIGN KEY (id_usuario_solicitante) REFERENCES Usuarios(id_usuario) ON DELETE CASCADE,
+    FOREIGN KEY (id_usuario_receptor) REFERENCES Usuarios(id_usuario) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS Notificaciones_Publicacion(

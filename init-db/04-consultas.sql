@@ -13,6 +13,36 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Trigger para verificar notificaciones de amistad
+CREATE OR REPLACE FUNCTION verificar_notificacion_amistad()
+RETURNS TRIGGER AS $$
+BEGIN
+   IF NOT EXISTS (
+    SELECT 1 
+        FROM Notificaciones_Amistad na 
+        WHERE na.id_usuario_solicitante = NEW.id_usuario1 
+          AND na.id_usuario_receptor = NEW.id_usuario2
+          AND na.estado = 'aceptada'
+        UNION ALL
+        SELECT 1 
+        FROM Notificaciones_Amistad na 
+        WHERE na.id_usuario_solicitante = NEW.id_usuario2 
+          AND na.id_usuario_receptor = NEW.id_usuario1
+          AND na.estado = 'aceptada'
+    ) THEN
+    RAISE EXCEPTION 'No se puede crear la amistad. No existe una solicitud de amistad "aceptada" previa entre los usuarios.';
+    END IF;
+RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE TRIGGER antes_insertar_amistad
+BEFORE INSERT ON Amistades
+FOR EACH ROW
+EXECUTE FUNCTION verificar_notificacion_amistad();
+
+
 CREATE TRIGGER insertar_publicacion_texto
 BEFORE INSERT ON Textos
 FOR EACH ROW
@@ -78,6 +108,8 @@ CREATE TRIGGER eliminar_publicacion_video
 BEFORE DELETE ON Videos
 FOR EACH ROW
 EXECUTE FUNCTION eliminar_publicacion_func();
+
+
 
 -- ===========================
 -- CONSULTAS
