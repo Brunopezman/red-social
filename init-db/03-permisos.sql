@@ -1,14 +1,10 @@
 -- ===========================
 -- Crear roles/usuarios
 -- ===========================
--- Crea el rol de administrador con permisos para iniciar sesión y una contraseña
-CREATE ROLE admin_role WITH LOGIN PASSWORD 'admin123';
-
--- Crea el rol de usuario con permisos para iniciar sesión y una contraseña
-CREATE ROLE user_role WITH LOGIN PASSWORD 'user123';
-
+CREATE ROLE admin_role WITH NOLOGIN;
+CREATE ROLE user_role WITH NOLOGIN;
 -- ===========================
--- Permisos para admin_user (full access)
+-- Permisos para admin_role (full access)
 -- ===========================
 GRANT ALL PRIVILEGES ON SCHEMA public TO admin_role;
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO admin_role;
@@ -24,28 +20,31 @@ GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO user_role;
 -- La seguridad de qué filas puede ver se controla con RLS.
 GRANT SELECT ON ALL TABLES IN SCHEMA public TO user_role;
 -- Permisos de ESCRITURA (INSERT)
-GRANT INSERT ON Publicaciones, Imagenes, Videos, Textos, Grupos, Mensajes, Amistades, Comentarios, Favoritos TO user_role;
+GRANT INSERT ON Publicaciones, Imagenes, Videos, Textos, Grupos, Mensajes, Notificaciones_Amistad, Comentarios, Favoritos TO user_role;
 
 -- Permisos de MODIFICACIÓN (UPDATE)
 -- El usuario solo podrá actualizar sus propias publicaciones, comentarios, etc. (controlado por RLS)
-GRANT UPDATE ON Publicaciones, Imagenes, Videos, Textos, Comentarios, Mensajes TO user_role;
+GRANT UPDATE ON Imagenes, Videos, Textos, Notificaciones_Amistad, Comentarios, Mensajes TO user_role;
 
 -- Permisos de BORRADO (DELETE)
 -- El usuario solo podrá borrar su propio contenido (controlado por RLS)
-GRANT DELETE ON Publicaciones, Imagenes, Videos, Textos, Comentarios, Mensajes, Favoritos, Usuarios_Grupos, Amistades, Usuarios TO user_role;
+GRANT DELETE ON Publicaciones, Imagenes, Videos, Textos, Notificaciones_Amistad, Comentarios, Mensajes, Favoritos, Usuarios_Grupos, Usuarios TO user_role;
 
 -- =====================================================================
 -- 4. ACTIVACIÓN DE SEGURIDAD A NIVEL DE FILA (ROW-LEVEL SECURITY - RLS)
 -- Se activa RLS en las tablas que contienen datos privados de los usuarios.
 -- =====================================================================
 ALTER TABLE Publicaciones ENABLE ROW LEVEL SECURITY;
+ALTER TABLE Imagenes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE Textos ENABLE ROW LEVEL SECURITY;
+ALTER TABLE Videos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE Mensajes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE Comentarios ENABLE ROW LEVEL SECURITY;
 ALTER TABLE Favoritos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE Usuarios_Grupos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE Amistades ENABLE ROW LEVEL SECURITY;
 ALTER TABLE Usuarios ENABLE ROW LEVEL SECURITY;
-ALTER TABLE Notificaciones ENABLE ROW LEVEL SECURITY;
+ALTER TABLE Notificaciones_Amistad ENABLE ROW LEVEL SECURITY;
 
 -- =====================================================================
 -- 5. CREACIÓN DE POLÍTICAS DE SEGURIDAD
@@ -54,6 +53,7 @@ ALTER TABLE Notificaciones ENABLE ROW LEVEL SECURITY;
 
 -- Políticas para PUBLICACIONES
 CREATE POLICY pub_select_all ON public.Publicaciones FOR SELECT USING (TRUE);
+-- Insert: trigger inserta la fila con el mismo id_usuario del que inserta en Texto/Imagen/Video
 CREATE POLICY pub_insert_own ON public.Publicaciones FOR INSERT TO user_role
   WITH CHECK (
     EXISTS (
@@ -66,29 +66,142 @@ CREATE POLICY pub_insert_own ON public.Publicaciones FOR INSERT TO user_role
 CREATE POLICY pub_update_own ON public.Publicaciones FOR UPDATE USING (id_usuario = (SELECT id_usuario FROM Usuarios WHERE username = CURRENT_USER));
 CREATE POLICY pub_delete_own ON public.Publicaciones FOR DELETE USING (id_usuario = (SELECT id_usuario FROM Usuarios WHERE username = CURRENT_USER));
 
--- Politicas para AMISTADES
+--Políticas para TEXTOS
+
+CREATE POLICY txt_select
+  ON public.textos
+  FOR SELECT TO user_role
+  USING (TRUE);
+
+-- Insertar / Actualizar / Borrar solo el propietario
+CREATE POLICY txt_insert
+  ON public.textos
+  FOR INSERT TO user_role
+  WITH CHECK (EXISTS (SELECT 1 FROM public.usuarios u
+                      WHERE u.id_usuario = public.textos.id_usuario
+                        AND u.username   = CURRENT_ROLE));
+
+CREATE POLICY txt_update
+  ON public.textos
+  FOR UPDATE TO user_role
+  USING (EXISTS (SELECT 1 FROM public.usuarios u
+                 WHERE u.id_usuario = public.textos.id_usuario
+                   AND u.username   = CURRENT_ROLE))
+  WITH CHECK (EXISTS (SELECT 1 FROM public.usuarios u
+                      WHERE u.id_usuario = public.textos.id_usuario
+                        AND u.username   = CURRENT_ROLE));
+
+CREATE POLICY txt_delete
+  ON public.textos
+  FOR DELETE TO user_role
+  USING (EXISTS (SELECT 1 FROM public.usuarios u
+                 WHERE u.id_usuario = public.textos.id_usuario
+                   AND u.username   = CURRENT_ROLE));
+-- IMAGENES
+CREATE POLICY img_select
+  ON public.imagenes
+  FOR SELECT TO user_role
+  USING (TRUE);
+
+-- Insertar / Actualizar / Borrar solo el propietario
+CREATE POLICY img_insert
+  ON public.imagenes
+  FOR INSERT TO user_role
+  WITH CHECK (EXISTS (SELECT 1 FROM public.usuarios u
+                      WHERE u.id_usuario = public.textos.id_usuario
+                        AND u.username   = CURRENT_ROLE));
+
+CREATE POLICY img_update
+  ON public.imagenes
+  FOR UPDATE TO user_role
+  USING (EXISTS (SELECT 1 FROM public.usuarios u
+                 WHERE u.id_usuario = public.textos.id_usuario
+                   AND u.username   = CURRENT_ROLE))
+  WITH CHECK (EXISTS (SELECT 1 FROM public.usuarios u
+                      WHERE u.id_usuario = public.textos.id_usuario
+                        AND u.username   = CURRENT_ROLE));
+
+CREATE POLICY img_delete
+  ON public.imagenes
+  FOR DELETE TO user_role
+  USING (EXISTS (SELECT 1 FROM public.usuarios u
+                 WHERE u.id_usuario = public.textos.id_usuario
+                   AND u.username   = CURRENT_ROLE));
+
+-- Políticas para AMISTADES
+
+CREATE POLICY na_select_own
+  ON public.notificaciones_amistad
+  FOR SELECT TO user_role
+  USING (
+    EXISTS (SELECT 1 FROM public.usuarios u
+            WHERE u.username = CURRENT_ROLE
+              AND (u.id_usuario = public.notificaciones_amistad.id_usuario_solicitante
+                   OR u.id_usuario = public.notificaciones_amistad.id_usuario_receptor))
+  );
+
+-- Insertar: sólo si YO soy el solicitante
+CREATE POLICY na_insert
+  ON public.notificaciones_amistad
+  FOR INSERT TO user_role
+  WITH CHECK (
+    EXISTS (SELECT 1 FROM public.usuarios u
+            WHERE u.username = CURRENT_ROLE
+              AND u.id_usuario = public.notificaciones_amistad.id_usuario_solicitante)
+    AND public.notificaciones_amistad.id_usuario_solicitante
+        <> public.notificaciones_amistad.id_usuario_receptor
+  );
+-- Actualizar: sólo el RECEPTOR puede cambiar estado ('pendiente' -> 'aceptada'/'rechazada')
+CREATE POLICY na_update_resp
+  ON public.notificaciones_amistad
+  FOR UPDATE TO user_role
+  USING (
+    EXISTS (SELECT 1 FROM public.usuarios u
+            WHERE u.username = CURRENT_ROLE
+              AND u.id_usuario = public.notificaciones_amistad.id_usuario_receptor)
+  )
+  WITH CHECK (
+    -- misma condición del USING y además forzar transición de estado
+    EXISTS (SELECT 1 FROM public.usuarios u
+            WHERE u.username = CURRENT_ROLE
+              AND u.id_usuario = public.notificaciones_amistad.id_usuario_receptor)
+    AND public.notificaciones_amistad.estado IN ('pendiente','aceptada','rechazada')
+  );
+
+CREATE POLICY na_admin_all
+  ON public.notificaciones_amistad
+  FOR ALL TO admin_role
+  USING (TRUE) WITH CHECK (TRUE);
+
+CREATE POLICY am_select_own
+  ON public.amistades
+  FOR SELECT TO user_role
+  USING (
+    EXISTS (SELECT 1 FROM public.usuarios u
+            WHERE u.username = CURRENT_ROLE
+              AND (u.id_usuario = public.amistades.id_usuario1
+                   OR u.id_usuario = public.amistades.id_usuario2))
+  );
+
+-- Insert/Delete: sólo si soy uno de los dos (el insert real lo hará tu lógica/trigger)
 CREATE POLICY am_insert_own
   ON public.amistades
   FOR INSERT TO user_role
   WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM public.usuarios u
-      WHERE u.username = CURRENT_ROLE
-        AND (u.id_usuario = public.amistades.id_usuario1
-             OR u.id_usuario = public.amistades.id_usuario2)
-    )
+    EXISTS (SELECT 1 FROM public.usuarios u
+            WHERE u.username = CURRENT_ROLE
+              AND (u.id_usuario = public.amistades.id_usuario1
+                   OR u.id_usuario = public.amistades.id_usuario2))
   );
-  
+
 CREATE POLICY am_delete_own
   ON public.amistades
   FOR DELETE TO user_role
   USING (
-    EXISTS (
-      SELECT 1 FROM public.usuarios u
-      WHERE u.username = CURRENT_ROLE
-        AND (u.id_usuario = public.amistades.id_usuario1
-             OR u.id_usuario = public.amistades.id_usuario2)
-    )
+    EXISTS (SELECT 1 FROM public.usuarios u
+            WHERE u.username = CURRENT_ROLE
+              AND (u.id_usuario = public.amistades.id_usuario1
+                   OR u.id_usuario = public.amistades.id_usuario2))
   );
 -- Políticas para MENSAJES
 CREATE POLICY msg_select_own ON Mensajes FOR SELECT USING (
