@@ -41,18 +41,25 @@ SET ROLE milamantilla;
 UPDATE Imagenes SET url_imagen = 'http://post18.com' WHERE id_publicacion = 999;
 
 -- Borro siendo milamantilla
-DELETE FROM Imagenes WHERE id_publicacion = 999;
+DELETE FROM Imagenes WHERE id_publicacion = 998;
 
 -- Intento modificar una publicacion que no es de milamantilla, estando en milamantilla, da error
 UPDATE Imagenes SET url_imagen = 'http://post404.com'
-WHERE id_publicacion = (SELECT id_publicacion FROM Imagenes WHERE id_usuario = 2 LIMIT 1);
+WHERE id_publicacion = (SELECT id_publicacion FROM Imagenes WHERE id_usuario = 3 LIMIT 1);
 
 -- Le mando amistad a pato
+INSERT INTO Notificaciones_amistad (id_evento, id_usuario_solicitante, id_usuario_receptor)
+VALUES (12, 10, 20);
+
+-- La solicitud de amistas es aceptada
+UPDATE notificaciones_amistad SET estado = 'aceptada' WHERE id_evento = 12;
+
+-- Se crea dicha amistad :)
 INSERT INTO Amistades (id_usuario1, id_usuario2) VALUES (10, 20);
 
 -- Le mando un mensaje a mpato
 INSERT INTO Mensajes (id_mensaje, id_usuario_emisor, id_usuario_receptor, contenido)
-VALUES (10, 1, 2, 'Hola mjuarez, soy milamantilla');
+VALUES (10, 10, 20, 'Hola mpato, soy milamantilla');
 
 SELECT id_usuario_emisor, id_usuario_receptor, contenido
 FROM Mensajes;
@@ -66,11 +73,11 @@ DELETE FROM Mensajes WHERE id_mensaje = 10;
 
 -- Agrego un comentario a la publicacion con id = 100
 INSERT INTO Comentarios (id_comentario, id_publicacion, id_usuario, contenido)
-VALUES (100, 999, (SELECT id_usuario FROM public.usuarios WHERE username=current_role), 'comment de mila');
+VALUES (100, 998, (SELECT id_usuario FROM public.usuarios WHERE username=current_user), 'comment de mila');
 
 INSERT INTO Comentarios (id_comentario, id_publicacion, id_usuario, contenido)
 VALUES (101, 101, 1, 'esto debería fallar');
 
 -- Marco como favorita la publicacion con id = 100
 INSERT INTO Favoritos (id_usuario, id_publicacion)
-VALUES ((SELECT id_usuario FROM public.usuarios WHERE username=current_role), 999);
+VALUES ((SELECT id_usuario FROM public.usuarios WHERE username=current_user), 998);

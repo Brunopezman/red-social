@@ -35,21 +35,21 @@ CREATE OR REPLACE FUNCTION normalizar_amistad()
 RETURNS TRIGGER AS $$
 DECLARE
     -- Declaramos la variable temporal DENTRO del cuerpo principal de la función
-    temp_id INT; 
+    temp_id INT;
 BEGIN
     -- 1. Verificar si la relación está en orden inverso (Ej: INSERT (20, 10))
     IF NEW.id_usuario1 > NEW.id_usuario2 THEN
-        
+
         -- 2. Realizar el intercambio de valores
         temp_id := NEW.id_usuario1;
         NEW.id_usuario1 := NEW.id_usuario2;
         NEW.id_usuario2 := temp_id;
-    RAISE EXCEPTION 'Ya existe una amistad entre ambos usuarios';    
+    RAISE EXCEPTION 'Ya existe una amistad entre ambos usuarios';
     END IF;
-    
-    -- 3. Si la relación ya existe (ej: (10, 20)), 
+
+    -- 3. Si la relación ya existe (ej: (10, 20)),
     -- la clave primaria lanzará el error al intentar insertar (10, 20) nuevamente.
-    
+
     RETURN NEW; -- Devolver la nueva fila (posiblemente normalizada)
 END;
 $$ LANGUAGE plpgsql;
@@ -318,7 +318,7 @@ SET url_video = 'http://videos.com/receta_full.mp4', duracion = 360, calidad = '
 WHERE id_publicacion = 5;
 
 -- El trigger actualizar_publicacion_imagen/video debería actualizar el campo 'url' de Publicaciones
-SELECT id_publicacion, url FROM Publicaciones WHERE id_publicacion IN (1, 3, 5);
+SELECT id_publicacion FROM Publicaciones WHERE id_publicacion IN (1, 3, 5);
 
 -- Elimina Texto (Publicacion 2) -> Dispara eliminar_publicacion_texto
 DELETE FROM Textos WHERE id_publicacion = 2;
@@ -339,11 +339,10 @@ DELETE FROM Usuarios WHERE id_usuario = 5;
 SELECT
     p.id_publicacion,
     COUNT(f.id_publicacion) AS cantidad_de_favoritos,
-    p.id_usuario,
-    p.url
+    p.id_usuario
 FROM Publicaciones p
 LEFT JOIN Favoritos f ON p.id_publicacion = f.id_publicacion
-GROUP BY p.id_publicacion, p.id_usuario, p.url
+GROUP BY p.id_publicacion, p.id_usuario
 ORDER BY cantidad_de_favoritos DESC;
 
 -- Mostrar los usuarios más populares basandose en la cantidad de publicaciones “favoritas” que poseen sus publicaciones.

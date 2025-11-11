@@ -12,12 +12,6 @@ INSERT INTO Usuarios (id_usuario, username, email, fecha_de_nacimiento, nombre, 
 (4, 'elena', 'elenasanchez@mail.com', '2001-01-25', 'Elena', 'Sanchez', 'España'),
 (5, 'felipe', 'felipediaz@mail.com', '1985-09-10', 'Felipe', 'Diaz', 'Colombia');
 
-INSERT INTO Amistades (id_usuario1, id_usuario2) VALUES
-(1, 2), -- Bruno y Carla
-(1, 3), -- Bruno y David
-(2, 4), -- Carla y Elena
-(3, 5); -- David y Felipe
-
 INSERT INTO Grupos (id_grupo, nombre_grupo, descripcion) VALUES
 (101, 'Ricoteros', 'Fundamentalistas del aire acondicionado'),
 (102, 'Programadores LATAM', 'Consultas y tips de código');
@@ -79,16 +73,24 @@ INSERT INTO Notificaciones (id_notificacion, id_usuario) VALUES
 (12, 3), -- Para David
 (13, 4); -- Para Elena
 
-INSERT INTO Notificaciones_Amistad (id_notificacion, id_usuario_solicitante, estado) VALUES
-(10, 2, 'pendiente');
+-- Notificación amistad de carla a bruno
+INSERT INTO Notificaciones_Amistad (id_evento, id_usuario_solicitante, id_usuario_receptor, estado) VALUES
+(10, 2, 1, 'pendiente');
+
+INSERT INTO Notificaciones_Amistad (id_evento, id_usuario_solicitante, id_usuario_receptor, estado) VALUES
+(15, 3, 5, 'aceptada');
+
+-- Amistad de David y Felipe se crea ya que el estado de su notificación de amistad es 'aceptada
+INSERT INTO Amistades (id_usuario1, id_usuario2) VALUES
+(3, 5); -- David y Felipe
 
 -- Notificación 11: Like (para Bruno)
-INSERT INTO Notificaciones_Publicacion (id_notificacion, id_usuario_publicador, id_publicacion, tipo) VALUES
+INSERT INTO Notificaciones_Publicacion (id_evento, id_usuario_publicador, id_publicacion, tipo) VALUES
 (11, 3, 1, 'like');
 
 -- Notificación 12: Comentario (para David)
-INSERT INTO Notificaciones_Publicacion (id_notificacion, id_usuario_publicador, id_publicacion, tipo) VALUES
+INSERT INTO Notificaciones_Publicacion (id_evento, id_usuario_publicador, id_publicacion, tipo) VALUES
 (12, 2, 3, 'comentario');
 
-INSERT INTO Notificaciones_Grupo (id_grupo, mensaje) VALUES
-(102, '¡Nueva reunión de programadores el próximo viernes!');
+INSERT INTO Notificaciones_Grupo (id_evento, id_grupo, mensaje) VALUES
+(13,102, '¡Nueva reunión de programadores el próximo viernes!');
