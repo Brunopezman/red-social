@@ -57,6 +57,21 @@ UPDATE notificaciones_amistad SET estado = 'aceptada' WHERE id_evento = 12;
 -- Se crea dicha amistad :)
 INSERT INTO Amistades (id_usuario1, id_usuario2) VALUES (10, 20);
 
+
+
+INSERT INTO Usuarios (id_usuario, username, email, fecha_de_nacimiento, nombre, apellido, pais)
+VALUES (111, 'aaaa', 'aaaaa@gmail.com', '2003-02-17', 'Mila', 'Mantilla', 'Argentina');
+INSERT INTO Usuarios (id_usuario, username, email, fecha_de_nacimiento, nombre, apellido, pais)
+VALUES (222, 'bbbb', 'bbbb@gmail.com', '2003-05-22', 'Manuel', 'Pato', 'Colombia');
+
+UPDATE notificaciones_amistad SET estado = 'aceptada' WHERE id_evento = 20;
+
+INSERT INTO Notificaciones_amistad (id_evento, id_usuario_solicitante, id_usuario_receptor)
+VALUES (333, 222, 111);
+
+INSERT INTO Amistades (id_usuario1, id_usuario2) VALUES (222, 111);
+
+
 -- Le mando un mensaje a mpato
 INSERT INTO Mensajes (id_mensaje, id_usuario_emisor, id_usuario_receptor, contenido)
 VALUES (10, 10, 20, 'Hola mpato, soy milamantilla');

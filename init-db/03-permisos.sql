@@ -122,6 +122,31 @@ CREATE POLICY vid_delete ON Videos FOR DELETE TO user_role
   USING (username = (SELECT username FROM Usuarios WHERE username = CURRENT_USER));
 
 
+CREATE POLICY video_insert
+  ON public.videos
+  FOR INSERT TO user_role
+  WITH CHECK (EXISTS (SELECT 1 FROM public.usuarios u
+                      WHERE u.id_usuario = public.videos.id_usuario
+                        AND u.username   = CURRENT_ROLE));
+
+CREATE POLICY video_update
+  ON public.videos
+  FOR UPDATE TO user_role
+  USING (EXISTS (SELECT 1 FROM public.usuarios u
+                 WHERE u.id_usuario = public.videos.id_usuario
+                   AND u.username   = CURRENT_ROLE))
+  WITH CHECK (EXISTS (SELECT 1 FROM public.usuarios u
+                      WHERE u.id_usuario = public.videos.id_usuario
+                        AND u.username   = CURRENT_ROLE));
+
+CREATE POLICY video_delete
+  ON public.videos
+  FOR DELETE TO user_role
+  USING (EXISTS (SELECT 1 FROM public.usuarios u
+                 WHERE u.id_usuario = public.videos.id_usuario
+                   AND u.username   = CURRENT_ROLE));
+
+
 -- Políticas para AMISTADES
 
 CREATE POLICY am_select_own
