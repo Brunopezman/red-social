@@ -1,6 +1,58 @@
 -- ===========================
 -- TRIGGERS
 -- ===========================
+-- Para notificar cuando un amigo publica algo
+
+CREATE OR REPLACE FUNCTION trg_notif_publicacion_amigos()
+RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO Notificaciones (id_destino, id_usuario_origen, tipo)
+    SELECT 
+        CASE 
+            WHEN a.id_usuario_1 = NEW.id_usuario THEN a.id_usuario_2
+            ELSE a.id_usuario_1
+        END AS amigo,
+        NEW.id_usuario,
+        'nueva_publicacion_amigo'
+    FROM Amistades a
+    WHERE 
+        (a.id_usuario_1 = NEW.id_usuario OR a.id_usuario_2 = NEW.id_usuario)
+        AND a.estado = 'aceptada';
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER notificar_amigos_publicacion
+AFTER INSERT ON Publicaciones
+FOR EACH ROW
+EXECUTE FUNCTION trg_notif_publicacion_amigos();
+
+-- Notificar cuando se sube algo a un grupo
+CREATE OR REPLACE FUNCTION trg_notif_publicacion_grupo()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Solo notificar si la publicación pertenece a un grupo
+    IF NEW.id_grupo IS NOT NULL THEN
+        INSERT INTO Notificaciones (id_usuario_destino, id_usuario_origen, tipo)
+        SELECT 
+            ug.id_usuario,
+            NEW.id_usuario,
+            'nueva_publicacion_grupo'
+        FROM Usuarios_Grupos ug
+        WHERE 
+            ug.id_grupo = NEW.id_grupo
+            AND ug.id_usuario <> NEW.id_usuario;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER notificar_grupo_publicacion
+AFTER INSERT ON Publicaciones
+FOR EACH ROW
+EXECUTE FUNCTION trg_notif_publicacion_grupo();
 
 -- Trigger para validar la amistad
 CREATE OR REPLACE FUNCTION validar_amistad_aceptada()
@@ -13,9 +65,9 @@ BEGIN
             WHERE 
                 N.tipo = 'SOLICITUD_AMISTAD'
                 AND (
-                    (N.id_usuario_origen = NEW.id_usuario_1 AND N.id_usuario_destino = NEW.id_usuario_2)
+                    (N.id_usuario_origen = NEW.id_usuario_1 AND N.id_destino = NEW.id_usuario_2)
                     OR
-                    (N.id_usuario_origen = NEW.id_usuario_2 AND N.id_usuario_destino = NEW.id_usuario_1)
+                    (N.id_usuario_origen = NEW.id_usuario_2 AND N.id_destino = NEW.id_usuario_1)
                 )
         ) THEN
             RAISE EXCEPTION 'No se puede aceptar amistad sin notificación previa';
@@ -32,6 +84,40 @@ BEFORE INSERT OR UPDATE ON Amistades
 FOR EACH ROW
 EXECUTE FUNCTION validar_amistad_aceptada();
 
+-- Triggers para solicitud de amistad
+CREATE OR REPLACE FUNCTION trg_notif_solicitud_amistad()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.estado = 'pendiente' THEN
+        INSERT INTO Notificaciones (id_usuario_destino, id_usuario_origen, tipo)
+        VALUES (NEW.id_usuario_2, NEW.id_usuario_1, 'solicitud_amistad');
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER notificar_solicitud_amistad
+AFTER INSERT ON Amistades
+FOR EACH ROW
+EXECUTE FUNCTION trg_notif_solicitud_amistad();
+
+CREATE OR REPLACE FUNCTION trg_notif_aceptacion_amistad()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF OLD.estado = 'pendiente' AND NEW.estado = 'aceptada' THEN
+        INSERT INTO Notificaciones (id_usuario_destino, id_usuario_origen, tipo)
+        VALUES (NEW.id_usuario_1, NEW.id_usuario_2, 'amistad_aceptada');
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER notificar_aceptacion_amistad
+AFTER UPDATE ON Amistades
+FOR EACH ROW
+EXECUTE FUNCTION trg_notif_aceptacion_amistad();
 
 -- Trigger para insertar Texto
 CREATE OR REPLACE FUNCTION insertar_publicacion_texto_func()

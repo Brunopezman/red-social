@@ -1,12 +1,5 @@
-CREATE TABLE IF NOT EXISTS Paises(
+CREATE TABLE IF NOT EXISTS Paises (
     nombre_pais VARCHAR(50) PRIMARY KEY NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS Grupos(
-    id_grupo INT PRIMARY KEY,
-    nombre_grupo VARCHAR(100) NOT NULL,
-    descripcion VARCHAR(300) DEFAULT NULL,
-    fecha_de_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS Usuarios(
@@ -20,6 +13,15 @@ CREATE TABLE IF NOT EXISTS Usuarios(
     pais VARCHAR(50) NOT NULL,
     cantidad_de_ingresos INT DEFAULT 0 CHECK (cantidad_de_ingresos >= 0),
     FOREIGN KEY (pais) REFERENCES Paises(nombre_pais)
+);
+
+CREATE TABLE IF NOT EXISTS Grupos(
+    id_grupo INT PRIMARY KEY,
+    id_creador INT NOT NULL,
+    nombre_grupo VARCHAR(100) NOT NULL,
+    descripcion VARCHAR(300) DEFAULT NULL,
+    fecha_de_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_creador) REFERENCES Usuarios(id_usuario)
 );
 
 CREATE TABLE IF NOT EXISTS Publicaciones (
@@ -75,7 +77,7 @@ CREATE TABLE IF NOT EXISTS Comentarios(
 );
 
 CREATE TABLE IF NOT EXISTS Amistades (
-    id_amistad        SERIAL PRIMARY KEY,
+    id_amistad        INT PRIMARY KEY,
     id_usuario_1      INT NOT NULL,
     id_usuario_2      INT NOT NULL,
     estado            VARCHAR(10) NOT NULL CHECK (estado IN ('pendiente', 'aceptada', 'rechazada')),
@@ -95,7 +97,7 @@ CREATE UNIQUE INDEX idx_amistad_par_unico ON Amistades (
 );
 
 CREATE TABLE IF NOT EXISTS Notificaciones (
-    id_notificacion      SERIAL PRIMARY KEY,
+    id_notificacion      INT PRIMARY KEY,
     id_usuario_destino   INT NOT NULL,
     id_usuario_origen    INT,
     tipo                 VARCHAR(30) NOT NULL,
