@@ -108,25 +108,50 @@ CREATE POLICY img_insert
   ON public.imagenes
   FOR INSERT TO user_role
   WITH CHECK (EXISTS (SELECT 1 FROM public.usuarios u
-                      WHERE u.id_usuario = public.textos.id_usuario
+                      WHERE u.id_usuario = public.imagenes.id_usuario
                         AND u.username   = CURRENT_ROLE));
 
 CREATE POLICY img_update
   ON public.imagenes
   FOR UPDATE TO user_role
   USING (EXISTS (SELECT 1 FROM public.usuarios u
-                 WHERE u.id_usuario = public.textos.id_usuario
+                 WHERE u.id_usuario = public.imagenes.id_usuario
                    AND u.username   = CURRENT_ROLE))
   WITH CHECK (EXISTS (SELECT 1 FROM public.usuarios u
-                      WHERE u.id_usuario = public.textos.id_usuario
+                      WHERE u.id_usuario = public.imagenes.id_usuario
                         AND u.username   = CURRENT_ROLE));
 
 CREATE POLICY img_delete
   ON public.imagenes
   FOR DELETE TO user_role
   USING (EXISTS (SELECT 1 FROM public.usuarios u
-                 WHERE u.id_usuario = public.textos.id_usuario
+                 WHERE u.id_usuario = public.imagenes.id_usuario
                    AND u.username   = CURRENT_ROLE));
+
+CREATE POLICY video_insert
+  ON public.videos
+  FOR INSERT TO user_role
+  WITH CHECK (EXISTS (SELECT 1 FROM public.usuarios u
+                      WHERE u.id_usuario = public.videos.id_usuario
+                        AND u.username   = CURRENT_ROLE));
+
+CREATE POLICY video_update
+  ON public.videos
+  FOR UPDATE TO user_role
+  USING (EXISTS (SELECT 1 FROM public.usuarios u
+                 WHERE u.id_usuario = public.videos.id_usuario
+                   AND u.username   = CURRENT_ROLE))
+  WITH CHECK (EXISTS (SELECT 1 FROM public.usuarios u
+                      WHERE u.id_usuario = public.videos.id_usuario
+                        AND u.username   = CURRENT_ROLE));
+
+CREATE POLICY video_delete
+  ON public.videos
+  FOR DELETE TO user_role
+  USING (EXISTS (SELECT 1 FROM public.usuarios u
+                 WHERE u.id_usuario = public.videos.id_usuario
+                   AND u.username   = CURRENT_ROLE));
+
 
 -- Políticas para AMISTADES
 
