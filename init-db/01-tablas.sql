@@ -1,10 +1,15 @@
+----------------------------------------------
+-- PAISES
+----------------------------------------------
 CREATE TABLE IF NOT EXISTS Paises (
     nombre_pais VARCHAR(50) PRIMARY KEY NOT NULL
 );
 
+----------------------------------------------
+-- USUARIOS (PK = username)
+----------------------------------------------
 CREATE TABLE IF NOT EXISTS Usuarios(
-    id_usuario INT PRIMARY KEY,
-    username VARCHAR(100) NOT NULL UNIQUE,
+    username VARCHAR(100) PRIMARY KEY,
     email VARCHAR(100) UNIQUE NOT NULL CHECK (email LIKE '%_@__%.__%'),
     fecha_de_alta TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     fecha_de_nacimiento DATE CHECK (fecha_de_nacimiento <= CURRENT_DATE),
@@ -12,116 +17,162 @@ CREATE TABLE IF NOT EXISTS Usuarios(
     apellido VARCHAR(100) NOT NULL,
     pais VARCHAR(50) NOT NULL,
     cantidad_de_ingresos INT DEFAULT 0 CHECK (cantidad_de_ingresos >= 0),
+    
     FOREIGN KEY (pais) REFERENCES Paises(nombre_pais)
 );
 
+----------------------------------------------
+-- GRUPOS (PK = nombre_grupo)
+----------------------------------------------
 CREATE TABLE IF NOT EXISTS Grupos(
-    id_grupo INT PRIMARY KEY,
-    id_creador INT NOT NULL,
-    nombre_grupo VARCHAR(100) NOT NULL,
+    nombre_grupo VARCHAR(100) PRIMARY KEY,
+    id_creador VARCHAR(100) NOT NULL,
     descripcion VARCHAR(300) DEFAULT NULL,
     fecha_de_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (id_creador) REFERENCES Usuarios(id_usuario)
+    
+    FOREIGN KEY (id_creador) REFERENCES Usuarios(username)
 );
 
+----------------------------------------------
+-- PUBLICACIONES (IDs mantenidos)
+----------------------------------------------
 CREATE TABLE IF NOT EXISTS Publicaciones (
     id_publicacion INT PRIMARY KEY,
-    id_usuario INT NOT NULL,
-    id_grupo INT DEFAULT NULL,
-    FOREIGN KEY (id_usuario) REFERENCES Usuarios(id_usuario) ON DELETE CASCADE,
-    FOREIGN KEY (id_grupo) REFERENCES Grupos(id_grupo) ON DELETE CASCADE
+    username VARCHAR(100) NOT NULL,
+    nombre_grupo VARCHAR(100) DEFAULT NULL,
+
+    FOREIGN KEY (username) REFERENCES Usuarios(username) ON DELETE CASCADE,
+    FOREIGN KEY (nombre_grupo) REFERENCES Grupos(nombre_grupo) ON DELETE CASCADE
 );
 
+----------------------------------------------
+-- IMAGENES
+----------------------------------------------
 CREATE TABLE IF NOT EXISTS Imagenes (
     id_publicacion INT PRIMARY KEY,
-    id_usuario INT NOT NULL,
-    id_grupo INT DEFAULT NULL,
+    username VARCHAR(100) NOT NULL,
+    nombre_grupo VARCHAR(100) DEFAULT NULL,
     url_imagen VARCHAR(200) NOT NULL CHECK (url_imagen LIKE 'http%'),
-    FOREIGN KEY (id_publicacion) REFERENCES Publicaciones(id_publicacion) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED
+
+    FOREIGN KEY (id_publicacion) REFERENCES Publicaciones(id_publicacion)
+        ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED
 );
 
+----------------------------------------------
+-- TEXTOS
+----------------------------------------------
 CREATE TABLE IF NOT EXISTS Textos (
     id_publicacion INT PRIMARY KEY,
-    id_usuario INT NOT NULL,
-    id_grupo INT DEFAULT NULL,
+    username VARCHAR(100) NOT NULL,
+    nombre_grupo VARCHAR(100) DEFAULT NULL,
     texto TEXT NOT NULL,
-    FOREIGN KEY (id_publicacion) REFERENCES Publicaciones(id_publicacion) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED
+
+    FOREIGN KEY (id_publicacion) REFERENCES Publicaciones(id_publicacion)
+        ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED
 );
 
+----------------------------------------------
+-- VIDEOS
+----------------------------------------------
 CREATE TABLE IF NOT EXISTS Videos (
     id_publicacion INT PRIMARY KEY,
-    id_usuario INT NOT NULL,
-    id_grupo INT DEFAULT NULL,
+    username VARCHAR(100) NOT NULL,
+    nombre_grupo VARCHAR(100) DEFAULT NULL,
     url_video VARCHAR(200) NOT NULL CHECK (url_video LIKE 'http%'),
     duracion INT NOT NULL CHECK (duracion BETWEEN 1 AND 10),
     calidad VARCHAR(20) CHECK (calidad IN ('480p', '720p', '1080p', '4K')),
-    FOREIGN KEY (id_publicacion) REFERENCES Publicaciones(id_publicacion) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED
+
+    FOREIGN KEY (id_publicacion) REFERENCES Publicaciones(id_publicacion)
+        ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED
 );
 
+----------------------------------------------
+-- USUARIOS_GRUPOS
+----------------------------------------------
 CREATE TABLE IF NOT EXISTS Usuarios_Grupos(
-    id_usuario INT NOT NULL,
-    id_grupo INT NOT NULL,
+    username VARCHAR(100) NOT NULL,
+    nombre_grupo VARCHAR(100) NOT NULL,
     fecha_de_union TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (id_usuario, id_grupo),
-    FOREIGN KEY (id_usuario) REFERENCES Usuarios(id_usuario) ON DELETE CASCADE,
-    FOREIGN KEY (id_grupo) REFERENCES Grupos(id_grupo) ON DELETE CASCADE
+
+    PRIMARY KEY (username, nombre_grupo),
+    FOREIGN KEY (username) REFERENCES Usuarios(username) ON DELETE CASCADE,
+    FOREIGN KEY (nombre_grupo) REFERENCES Grupos(nombre_grupo) ON DELETE CASCADE
 );
 
+----------------------------------------------
+-- COMENTARIOS (SERIAL)
+----------------------------------------------
 CREATE TABLE IF NOT EXISTS Comentarios(
-    id_comentario INT PRIMARY KEY,
+    id_comentario SERIAL PRIMARY KEY,
     id_publicacion INT NOT NULL,
-    id_usuario INT NOT NULL,
+    username VARCHAR(100) NOT NULL,
     contenido VARCHAR(300) NOT NULL,
+
     FOREIGN KEY (id_publicacion) REFERENCES Publicaciones(id_publicacion) ON DELETE CASCADE,
-    FOREIGN KEY (id_usuario) REFERENCES Usuarios(id_usuario) ON DELETE CASCADE
+    FOREIGN KEY (username) REFERENCES Usuarios(username) ON DELETE CASCADE
 );
 
+----------------------------------------------
+-- AMISTADES (PK ahora con usernames)
+----------------------------------------------
 CREATE TABLE IF NOT EXISTS Amistades (
-    id_amistad        INT PRIMARY KEY,
-    id_usuario_1      INT NOT NULL,
-    id_usuario_2      INT NOT NULL,
-    estado            VARCHAR(10) NOT NULL CHECK (estado IN ('pendiente', 'aceptada', 'rechazada')),
-    fecha_solicitud   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    username_1 VARCHAR(100) NOT NULL,
+    username_2 VARCHAR(100) NOT NULL,
+    estado VARCHAR(10) NOT NULL CHECK (estado IN ('pendiente', 'aceptada', 'rechazada')),
+    fecha_solicitud TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
-    FOREIGN KEY (id_usuario_1) REFERENCES Usuarios(id_usuario),
-    FOREIGN KEY (id_usuario_2) REFERENCES Usuarios(id_usuario),
-    
-    -- Sugerencia: Añadir para evitar que un usuario se auto-solicite amistad
-    CHECK (id_usuario_1 <> id_usuario_2)
+    PRIMARY KEY(username_1, username_2),
+
+    FOREIGN KEY (username_1) REFERENCES Usuarios(username),
+    FOREIGN KEY (username_2) REFERENCES Usuarios(username),
+
+    CHECK (username_1 <> username_2)
 );
 
--- Este índice garantiza la unicidad para pares (A,B) y (B,A)
+-- índice de unicidad para pares (A,B) ≡ (B,A)
 CREATE UNIQUE INDEX idx_amistad_par_unico ON Amistades (
-    LEAST(id_usuario_1, id_usuario_2),
-    GREATEST(id_usuario_1, id_usuario_2)
+    LEAST(username_1, username_2),
+    GREATEST(username_1, username_2)
 );
 
+----------------------------------------------
+-- NOTIFICACIONES (SERIAL)
+----------------------------------------------
 CREATE TABLE IF NOT EXISTS Notificaciones (
-    id_notificacion      INT PRIMARY KEY,
-    id_usuario_destino   INT NOT NULL,
-    id_usuario_origen    INT,
-    tipo                 VARCHAR(30) NOT NULL,
-    fecha                TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    id_notificacion SERIAL PRIMARY KEY,
+    username_destino VARCHAR(100) NOT NULL,
+    username_origen VARCHAR(100),
+    tipo VARCHAR(30) NOT NULL,
+    fecha TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    FOREIGN KEY (id_usuario_destino) REFERENCES Usuarios(id_usuario),
-    FOREIGN KEY (id_usuario_origen)  REFERENCES Usuarios(id_usuario)
+    FOREIGN KEY (username_destino) REFERENCES Usuarios(username),
+    FOREIGN KEY (username_origen)  REFERENCES Usuarios(username)
 );
 
+----------------------------------------------
+-- MENSAJES (SERIAL)
+----------------------------------------------
 CREATE TABLE IF NOT EXISTS Mensajes(
-    id_mensaje INT PRIMARY KEY,
-    id_usuario_emisor INT NOT NULL,
-    id_usuario_receptor INT NOT NULL,
+    id_mensaje SERIAL PRIMARY KEY,
+    username_emisor VARCHAR(100) NOT NULL,
+    username_receptor VARCHAR(100) NOT NULL,
     estado VARCHAR(20) DEFAULT 'no_leido' CHECK (estado IN ('leido', 'no_leido')),
     contenido VARCHAR(500) NOT NULL,
     fecha_de_envio TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (id_usuario_emisor) REFERENCES Usuarios(id_usuario) ON DELETE CASCADE,
-    FOREIGN KEY (id_usuario_receptor) REFERENCES Usuarios(id_usuario) ON DELETE CASCADE
+
+    FOREIGN KEY (username_emisor) REFERENCES Usuarios(username) ON DELETE CASCADE,
+    FOREIGN KEY (username_receptor) REFERENCES Usuarios(username) ON DELETE CASCADE
 );
 
+----------------------------------------------
+-- FAVORITOS
+----------------------------------------------
 CREATE TABLE IF NOT EXISTS Favoritos(
-    id_usuario INT NOT NULL,
+    username VARCHAR(100) NOT NULL,
     id_publicacion INT NOT NULL,
-    PRIMARY KEY (id_usuario, id_publicacion),
-    FOREIGN KEY (id_usuario) REFERENCES Usuarios(id_usuario) ON DELETE CASCADE,
+
+    PRIMARY KEY (username, id_publicacion),
+
+    FOREIGN KEY (username) REFERENCES Usuarios(username) ON DELETE CASCADE,
     FOREIGN KEY (id_publicacion) REFERENCES Publicaciones(id_publicacion) ON DELETE CASCADE
 );

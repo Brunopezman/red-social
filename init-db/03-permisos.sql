@@ -63,63 +63,63 @@ CREATE POLICY pub_select_all ON Publicaciones
 CREATE POLICY pub_insert_own ON Publicaciones
   FOR INSERT TO user_role
   WITH CHECK (
-    id_usuario = (SELECT id_usuario FROM Usuarios WHERE username = CURRENT_USER)
+    username = (SELECT username FROM Usuarios WHERE username = CURRENT_USER)
   );
 
 CREATE POLICY pub_update_own ON Publicaciones
   FOR UPDATE TO user_role
   USING (
-    id_usuario = (SELECT id_usuario FROM Usuarios WHERE username = CURRENT_USER)
+    username = (SELECT username FROM Usuarios WHERE username = CURRENT_USER)
   )
   WITH CHECK (
-    id_usuario = (SELECT id_usuario FROM Usuarios WHERE username = CURRENT_USER)
+    username = (SELECT username FROM Usuarios WHERE username = CURRENT_USER)
   );
 
 CREATE POLICY pub_delete_own ON Publicaciones
   FOR DELETE TO user_role
-  USING (id_usuario = (SELECT id_usuario FROM Usuarios WHERE username = CURRENT_USER));
+  USING (username = (SELECT username FROM Usuarios WHERE username = CURRENT_USER));
 
 --Políticas para TEXTOS
 
 CREATE POLICY txt_select ON Textos FOR SELECT USING (TRUE);
 
 CREATE POLICY txt_insert ON Textos FOR INSERT TO user_role
-  WITH CHECK (id_usuario = (SELECT id_usuario FROM Usuarios WHERE username = CURRENT_USER));
+  WITH CHECK (username = (SELECT username FROM Usuarios WHERE username = CURRENT_USER));
 
 CREATE POLICY txt_update ON Textos FOR UPDATE TO user_role
-  USING (id_usuario = (SELECT id_usuario FROM Usuarios WHERE username = CURRENT_USER))
-  WITH CHECK (id_usuario = (SELECT id_usuario FROM Usuarios WHERE username = CURRENT_USER));
+  USING (username = (SELECT username FROM Usuarios WHERE username = CURRENT_USER))
+  WITH CHECK (username = (SELECT username FROM Usuarios WHERE username = CURRENT_USER));
 
 CREATE POLICY txt_delete ON Textos FOR DELETE TO user_role
-  USING (id_usuario = (SELECT id_usuario FROM Usuarios WHERE username = CURRENT_USER));
+  USING (username = (SELECT username FROM Usuarios WHERE username = CURRENT_USER));
 
 
 -- IMAGENES
 CREATE POLICY img_select ON Imagenes FOR SELECT USING (TRUE);
 
 CREATE POLICY img_insert ON Imagenes FOR INSERT TO user_role
-  WITH CHECK (id_usuario = (SELECT id_usuario FROM Usuarios WHERE username = CURRENT_USER));
+  WITH CHECK (username = (SELECT username FROM Usuarios WHERE username = CURRENT_USER));
 
 CREATE POLICY img_update ON Imagenes FOR UPDATE TO user_role
-  USING (id_usuario = (SELECT id_usuario FROM Usuarios WHERE username = CURRENT_USER))
-  WITH CHECK (id_usuario = (SELECT id_usuario FROM Usuarios WHERE username = CURRENT_USER));
+  USING (username = (SELECT username FROM Usuarios WHERE username = CURRENT_USER))
+  WITH CHECK (username = (SELECT username FROM Usuarios WHERE username = CURRENT_USER));
 
 CREATE POLICY img_delete ON Imagenes FOR DELETE TO user_role
-  USING (id_usuario = (SELECT id_usuario FROM Usuarios WHERE username = CURRENT_USER));
+  USING (username = (SELECT username FROM Usuarios WHERE username = CURRENT_USER));
 
 -- VIDEOS
 
 CREATE POLICY vid_select ON Videos FOR SELECT USING (TRUE);
 
 CREATE POLICY vid_insert ON Videos FOR INSERT TO user_role
-  WITH CHECK (id_usuario = (SELECT id_usuario FROM Usuarios WHERE username = CURRENT_USER));
+  WITH CHECK (username = (SELECT username FROM Usuarios WHERE username = CURRENT_USER));
 
 CREATE POLICY vid_update ON Videos FOR UPDATE TO user_role
-  USING (id_usuario = (SELECT id_usuario FROM Usuarios WHERE username = CURRENT_USER))
-  WITH CHECK (id_usuario = (SELECT id_usuario FROM Usuarios WHERE username = CURRENT_USER));
+  USING (username = (SELECT username FROM Usuarios WHERE username = CURRENT_USER))
+  WITH CHECK (username = (SELECT username FROM Usuarios WHERE username = CURRENT_USER));
 
 CREATE POLICY vid_delete ON Videos FOR DELETE TO user_role
-  USING (id_usuario = (SELECT id_usuario FROM Usuarios WHERE username = CURRENT_USER));
+  USING (username = (SELECT username FROM Usuarios WHERE username = CURRENT_USER));
 
 
 -- Políticas para AMISTADES
@@ -127,53 +127,53 @@ CREATE POLICY vid_delete ON Videos FOR DELETE TO user_role
 CREATE POLICY am_select_own
   ON Amistades FOR SELECT TO user_role
   USING (
-    (SELECT id_usuario FROM Usuarios WHERE username = CURRENT_USER)
-      IN (id_usuario_1, id_usuario_2)
+    (SELECT username FROM Usuarios WHERE username = CURRENT_USER)
+      IN (username_1, username_2)
   );
 
 CREATE POLICY am_insert_own
   ON Amistades FOR INSERT TO user_role
   WITH CHECK (
-    (SELECT id_usuario FROM Usuarios WHERE username = CURRENT_USER)
-      IN (id_usuario_1, id_usuario_2)
+    (SELECT username FROM Usuarios WHERE username = CURRENT_USER)
+      IN (username_1, username_2)
   );
 
 CREATE POLICY am_delete_own
   ON Amistades FOR DELETE TO user_role
   USING (
-    (SELECT id_usuario FROM Usuarios WHERE username = CURRENT_USER)
-      IN (id_usuario_1, id_usuario_2)
+    (SELECT username FROM Usuarios WHERE username = CURRENT_USER)
+      IN (username_1, username_2)
   );
 -- para USUARIOS_GRUPOS
 CREATE POLICY ug_select_own ON Usuarios_Grupos
   FOR SELECT TO user_role
   USING (
-    id_usuario = (SELECT id_usuario FROM Usuarios WHERE username = CURRENT_USER)
+    username = (SELECT username FROM Usuarios WHERE username = CURRENT_USER)
   );
 
 CREATE POLICY ug_insert_own ON Usuarios_Grupos
   FOR INSERT TO user_role
   WITH CHECK (
-    id_usuario = (SELECT id_usuario FROM Usuarios WHERE username = CURRENT_USER)
+    username = (SELECT username FROM Usuarios WHERE username = CURRENT_USER)
   );
 
 CREATE POLICY ug_delete_own ON Usuarios_Grupos
   FOR DELETE TO user_role
   USING (
-    id_usuario = (SELECT id_usuario FROM Usuarios WHERE username = CURRENT_USER)
+    username = (SELECT username FROM Usuarios WHERE username = CURRENT_USER)
   );
 
 -- para NOTIFICACIONES
 CREATE POLICY noti_select_own ON Notificaciones
   FOR SELECT TO user_role
   USING (
-    id_usuario = (SELECT id_usuario FROM Usuarios WHERE username = CURRENT_USER)
+    username = (SELECT username FROM Usuarios WHERE username = CURRENT_USER)
   );
 
 CREATE POLICY noti_insert_own ON Notificaciones
   FOR INSERT TO user_role
   WITH CHECK (
-    id_usuario = (SELECT id_usuario FROM Usuarios WHERE username = CURRENT_USER)
+    username = (SELECT username FROM Usuarios WHERE username = CURRENT_USER)
   );
 
 CREATE POLICY noti_admin_all ON Notificaciones
@@ -182,25 +182,25 @@ CREATE POLICY noti_admin_all ON Notificaciones
 
 -- Políticas para MENSAJES
 CREATE POLICY msg_select_own ON Mensajes FOR SELECT USING (
-    id_usuario_emisor = (SELECT id_usuario FROM Usuarios WHERE username = CURRENT_USER) OR
-    id_usuario_receptor = (SELECT id_usuario FROM Usuarios WHERE username = CURRENT_USER)
+    username_emisor = (SELECT username FROM Usuarios WHERE username = CURRENT_USER) OR
+    username_receptor = (SELECT username FROM Usuarios WHERE username = CURRENT_USER)
 );
-CREATE POLICY msg_insert_own ON Mensajes FOR INSERT WITH CHECK (id_usuario_emisor = (SELECT id_usuario FROM Usuarios WHERE username = CURRENT_USER));
-CREATE POLICY msg_delete_own ON Mensajes FOR DELETE USING (id_usuario_emisor = (SELECT id_usuario FROM Usuarios WHERE username = CURRENT_USER));
+CREATE POLICY msg_insert_own ON Mensajes FOR INSERT WITH CHECK (username_emisor = (SELECT username FROM Usuarios WHERE username = CURRENT_USER));
+CREATE POLICY msg_delete_own ON Mensajes FOR DELETE USING (username_emisor = (SELECT username FROM Usuarios WHERE username = CURRENT_USER));
 
 -- Políticas para COMENTARIOS
 CREATE POLICY com_select_all ON Comentarios FOR SELECT USING (TRUE);
-CREATE POLICY com_insert_own ON Comentarios FOR INSERT WITH CHECK (id_usuario = (SELECT id_usuario FROM Usuarios WHERE username = CURRENT_USER));
-CREATE POLICY com_delete_own ON Comentarios FOR DELETE USING (id_usuario = (SELECT id_usuario FROM Usuarios WHERE username = CURRENT_USER));
+CREATE POLICY com_insert_own ON Comentarios FOR INSERT WITH CHECK (username = (SELECT username FROM Usuarios WHERE username = CURRENT_USER));
+CREATE POLICY com_delete_own ON Comentarios FOR DELETE USING (username = (SELECT username FROM Usuarios WHERE username = CURRENT_USER));
 
 -- Políticas para FAVORITOS
 CREATE POLICY fav_select_all ON Favoritos FOR SELECT USING (TRUE);
-CREATE POLICY fav_insert_own ON Favoritos FOR INSERT WITH CHECK (id_usuario = (SELECT id_usuario FROM Usuarios WHERE username = CURRENT_USER));
-CREATE POLICY fav_delete_own ON Favoritos FOR DELETE USING (id_usuario = (SELECT id_usuario FROM Usuarios WHERE username = CURRENT_USER));
+CREATE POLICY fav_insert_own ON Favoritos FOR INSERT WITH CHECK (username = (SELECT username FROM Usuarios WHERE username = CURRENT_USER));
+CREATE POLICY fav_delete_own ON Favoritos FOR DELETE USING (username = (SELECT username FROM Usuarios WHERE username = CURRENT_USER));
 
 -- Políticas para USUARIOS (Para permitir que un usuario se elimine a sí mismo)
 CREATE POLICY user_select_all ON Usuarios FOR SELECT USING (TRUE);
-CREATE POLICY user_delete_own ON Usuarios FOR DELETE USING (id_usuario = (SELECT id_usuario FROM Usuarios WHERE username = CURRENT_USER));
+CREATE POLICY user_delete_own ON Usuarios FOR DELETE USING (username = (SELECT username FROM Usuarios WHERE username = CURRENT_USER));
 
 CREATE POLICY ug_select_own
   ON public.usuarios_grupos
@@ -208,7 +208,7 @@ CREATE POLICY ug_select_own
   USING (
     EXISTS (
       SELECT 1 FROM public.usuarios u
-      WHERE u.id_usuario = public.usuarios_grupos.id_usuario
+      WHERE u.username = public.usuarios_grupos.username
         AND u.username   = CURRENT_USER
     )
   );
@@ -219,7 +219,7 @@ CREATE POLICY ug_insert_own
   WITH CHECK (
     EXISTS (
       SELECT 1 FROM public.usuarios u
-      WHERE u.id_usuario = public.usuarios_grupos.id_usuario
+      WHERE u.username = public.usuarios_grupos.username
         AND u.username   = CURRENT_USER
     )
   );
@@ -235,24 +235,24 @@ CREATE POLICY grp_select_all ON Grupos
 CREATE POLICY grp_insert_any ON Grupos
     FOR INSERT TO user_role
     WITH CHECK (
-        id_creador = (SELECT id_usuario FROM Usuarios WHERE username = CURRENT_USER)
+        id_creador = (SELECT username FROM Usuarios WHERE username = CURRENT_USER)
     );
 
 -- Solo el creador puede modificar su grupo
 CREATE POLICY grp_update_own ON Grupos
     FOR UPDATE TO user_role
     USING (
-        id_creador = (SELECT id_usuario FROM Usuarios WHERE username = CURRENT_USER)
+        id_creador = (SELECT username FROM Usuarios WHERE username = CURRENT_USER)
     )
     WITH CHECK (
-        id_creador = (SELECT id_usuario FROM Usuarios WHERE username = CURRENT_USER)
+        id_creador = (SELECT username FROM Usuarios WHERE username = CURRENT_USER)
     );
 
 -- Solo el creador puede eliminar su grupo
 CREATE POLICY grp_delete_own ON Grupos
     FOR DELETE TO user_role
     USING (
-        id_creador = (SELECT id_usuario FROM Usuarios WHERE username = CURRENT_USER)
+        id_creador = (SELECT username FROM Usuarios WHERE username = CURRENT_USER)
     );
 
 -- admin puede todo
@@ -266,7 +266,7 @@ CREATE POLICY user_select_all ON Usuarios FOR SELECT USING (TRUE);
 
 CREATE POLICY user_delete_own ON Usuarios
   FOR DELETE TO user_role
-  USING (id_usuario = (SELECT id_usuario FROM Usuarios WHERE username = CURRENT_USER));
+  USING (username = (SELECT username FROM Usuarios WHERE username = CURRENT_USER));
 
 
 CREATE POLICY noti_insert_admin ON Notificaciones
