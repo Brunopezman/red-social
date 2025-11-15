@@ -1,13 +1,7 @@
-----------------------------------------------
--- PAISES
-----------------------------------------------
 CREATE TABLE IF NOT EXISTS Paises (
     nombre_pais VARCHAR(50) PRIMARY KEY NOT NULL
 );
 
-----------------------------------------------
--- USUARIOS (PK = username)
-----------------------------------------------
 CREATE TABLE IF NOT EXISTS Usuarios(
     username VARCHAR(100) PRIMARY KEY,
     email VARCHAR(100) UNIQUE NOT NULL CHECK (email LIKE '%_@__%.__%'),
@@ -21,9 +15,6 @@ CREATE TABLE IF NOT EXISTS Usuarios(
     FOREIGN KEY (pais) REFERENCES Paises(nombre_pais)
 );
 
-----------------------------------------------
--- GRUPOS (PK = nombre_grupo)
-----------------------------------------------
 CREATE TABLE IF NOT EXISTS Grupos(
     nombre_grupo VARCHAR(100) PRIMARY KEY,
     id_creador VARCHAR(100) NOT NULL,
@@ -33,9 +24,6 @@ CREATE TABLE IF NOT EXISTS Grupos(
     FOREIGN KEY (id_creador) REFERENCES Usuarios(username)
 );
 
-----------------------------------------------
--- PUBLICACIONES (IDs mantenidos)
-----------------------------------------------
 CREATE TABLE IF NOT EXISTS Publicaciones (
     id_publicacion INT PRIMARY KEY,
     username VARCHAR(100) NOT NULL,
@@ -45,9 +33,6 @@ CREATE TABLE IF NOT EXISTS Publicaciones (
     FOREIGN KEY (nombre_grupo) REFERENCES Grupos(nombre_grupo) ON DELETE CASCADE
 );
 
-----------------------------------------------
--- IMAGENES
-----------------------------------------------
 CREATE TABLE IF NOT EXISTS Imagenes (
     id_publicacion INT PRIMARY KEY,
     username VARCHAR(100) NOT NULL,
@@ -58,9 +43,6 @@ CREATE TABLE IF NOT EXISTS Imagenes (
         ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED
 );
 
-----------------------------------------------
--- TEXTOS
-----------------------------------------------
 CREATE TABLE IF NOT EXISTS Textos (
     id_publicacion INT PRIMARY KEY,
     username VARCHAR(100) NOT NULL,
@@ -71,9 +53,6 @@ CREATE TABLE IF NOT EXISTS Textos (
         ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED
 );
 
-----------------------------------------------
--- VIDEOS
-----------------------------------------------
 CREATE TABLE IF NOT EXISTS Videos (
     id_publicacion INT PRIMARY KEY,
     username VARCHAR(100) NOT NULL,
@@ -86,9 +65,6 @@ CREATE TABLE IF NOT EXISTS Videos (
         ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED
 );
 
-----------------------------------------------
--- USUARIOS_GRUPOS
-----------------------------------------------
 CREATE TABLE IF NOT EXISTS Usuarios_Grupos(
     username VARCHAR(100) NOT NULL,
     nombre_grupo VARCHAR(100) NOT NULL,
@@ -99,9 +75,6 @@ CREATE TABLE IF NOT EXISTS Usuarios_Grupos(
     FOREIGN KEY (nombre_grupo) REFERENCES Grupos(nombre_grupo) ON DELETE CASCADE
 );
 
-----------------------------------------------
--- COMENTARIOS (SERIAL)
-----------------------------------------------
 CREATE TABLE IF NOT EXISTS Comentarios(
     id_comentario SERIAL PRIMARY KEY,
     id_publicacion INT NOT NULL,
@@ -112,9 +85,6 @@ CREATE TABLE IF NOT EXISTS Comentarios(
     FOREIGN KEY (username) REFERENCES Usuarios(username) ON DELETE CASCADE
 );
 
-----------------------------------------------
--- AMISTADES (PK ahora con usernames)
-----------------------------------------------
 CREATE TABLE IF NOT EXISTS Amistades (
     username_1 VARCHAR(100) NOT NULL,
     username_2 VARCHAR(100) NOT NULL,
@@ -135,9 +105,6 @@ CREATE UNIQUE INDEX idx_amistad_par_unico ON Amistades (
     GREATEST(username_1, username_2)
 );
 
-----------------------------------------------
--- NOTIFICACIONES (SERIAL)
-----------------------------------------------
 CREATE TABLE IF NOT EXISTS Notificaciones (
     id_notificacion SERIAL PRIMARY KEY,
     username_destino VARCHAR(100) NOT NULL,
@@ -149,9 +116,6 @@ CREATE TABLE IF NOT EXISTS Notificaciones (
     FOREIGN KEY (username_origen)  REFERENCES Usuarios(username)
 );
 
-----------------------------------------------
--- MENSAJES (SERIAL)
-----------------------------------------------
 CREATE TABLE IF NOT EXISTS Mensajes(
     id_mensaje SERIAL PRIMARY KEY,
     username_emisor VARCHAR(100) NOT NULL,
@@ -164,9 +128,6 @@ CREATE TABLE IF NOT EXISTS Mensajes(
     FOREIGN KEY (username_receptor) REFERENCES Usuarios(username) ON DELETE CASCADE
 );
 
-----------------------------------------------
--- FAVORITOS
-----------------------------------------------
 CREATE TABLE IF NOT EXISTS Favoritos(
     username VARCHAR(100) NOT NULL,
     id_publicacion INT NOT NULL,
