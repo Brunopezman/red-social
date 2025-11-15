@@ -215,15 +215,16 @@ FROM Usuarios;
 
 -- Listar todas las amistades de la red social.
 SELECT
-    a.id_usuario1,
+    a.id_usuario_1,
     u.nombre,
     u.apellido,
-    a.id_usuario2,
+    a.id_usuario_2,
     u2.nombre,
     u2.apellido
 FROM Amistades a
-JOIN Usuarios u ON a.id_usuario1 = u.id_usuario
-JOIN Usuarios u2 ON a.id_usuario2 = u2.id_usuario;
+JOIN Usuarios u ON a.id_usuario_1 = u.id_usuario
+JOIN Usuarios u2 ON a.id_usuario_2 = u2.id_usuario
+WHERE a.estado = 'aceptada';
 
 -- Listar los amigos de un usuario particular de la red social.
 SELECT
@@ -236,11 +237,11 @@ FROM Usuarios u
 WHERE u.id_usuario IN (
     SELECT
         CASE
-            WHEN a.id_usuario1 = CURRENT_USER THEN a.id_usuario2
-            ELSE a.id_usuario1
+            WHEN a.id_usuario_1 = CURRENT_USER THEN a.id_usuario_2
+            ELSE a.id_usuario_1
         END AS amigo_id
     FROM Amistades a
-    WHERE CURRENT_USER IN (a.id_usuario1, a.id_usuario2)
+    WHERE CURRENT_USER IN (a.id_usuario_1, a.id_usuario_2) AND a.estado = 'aceptada'
 );
 
 -- Listar todos los mensajes de la red social.
