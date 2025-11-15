@@ -1,67 +1,148 @@
--- ===========================
+-- ============================================================
 -- TRIGGERS
--- ===========================
+-- ============================================================
 
--- Trigger para verificar notificaciones de amistad
-CREATE OR REPLACE FUNCTION verificar_notificacion_amistad()
+---------------------------------------------------------------
+-- Notificar cuando un usuario publica algo (a sus amigos)
+---------------------------------------------------------------
+CREATE OR REPLACE FUNCTION trg_notif_publicacion_amigos()
 RETURNS TRIGGER AS $$
 BEGIN
-   IF NOT EXISTS (
-    SELECT 1 
-        FROM Notificaciones_Amistad na 
-        WHERE na.id_usuario_solicitante = NEW.id_usuario1 
-          AND na.id_usuario_receptor = NEW.id_usuario2
-          AND na.estado = 'aceptada'
-        UNION ALL
-        SELECT 1 
-        FROM Notificaciones_Amistad na 
-        WHERE na.id_usuario_solicitante = NEW.id_usuario2 
-          AND na.id_usuario_receptor = NEW.id_usuario1
-          AND na.estado = 'aceptada'
-    ) THEN
-    RAISE EXCEPTION 'No se puede crear la amistad. No existe una solicitud de amistad "aceptada" previa entre los usuarios.';
-    END IF;
-RETURN NEW;
+    INSERT INTO Notificaciones (username_destino, username_origen, tipo)
+    SELECT 
+        CASE 
+            WHEN a.username_1 = NEW.username THEN a.username_2
+            ELSE a.username_1
+        END AS amigo,
+        NEW.username,
+        'nueva_publicacion_amigo'
+    FROM Amistades a
+    WHERE 
+        (a.username_1 = NEW.username OR a.username_2 = NEW.username)
+        AND a.estado = 'aceptada';
+
+    RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER antes_insertar_amistad
-BEFORE INSERT ON Amistades
+CREATE TRIGGER notificar_amigos_publicacion
+AFTER INSERT ON Publicaciones
 FOR EACH ROW
-EXECUTE FUNCTION verificar_notificacion_amistad();
+EXECUTE FUNCTION trg_notif_publicacion_amigos();
 
--- Trigger para evitar amistades duplicadas
-CREATE OR REPLACE FUNCTION normalizar_amistad()
+
+---------------------------------------------------------------
+-- Notificar cuando se publica algo dentro de un grupo
+---------------------------------------------------------------
+CREATE OR REPLACE FUNCTION trg_notif_publicacion_grupo()
 RETURNS TRIGGER AS $$
-DECLARE
-    temp_id INT;
 BEGIN
-    -- 1. Verificar si la relación está en orden inverso
-    IF NEW.id_usuario1 > NEW.id_usuario2 THEN
-
-        -- 2. Realizar el intercambio de valores para normalizar
-        temp_id := NEW.id_usuario1;
-        NEW.id_usuario1 := NEW.id_usuario2;
-        NEW.id_usuario2 := temp_id;
-
+    IF NEW.nombre_grupo IS NOT NULL THEN
+        INSERT INTO Notificaciones (username_destino, username_origen, tipo)
+        SELECT 
+            ug.username,
+            NEW.username,
+            'nueva_publicacion_grupo'
+        FROM Usuarios_Grupos ug
+        WHERE 
+            ug.nombre_grupo = NEW.nombre_grupo
+            AND ug.username <> NEW.username;
     END IF;
 
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER tr_normalizar_amistad
-BEFORE INSERT ON Amistades
+CREATE TRIGGER notificar_grupo_publicacion
+AFTER INSERT ON Publicaciones
 FOR EACH ROW
-EXECUTE FUNCTION normalizar_amistad();
+EXECUTE FUNCTION trg_notif_publicacion_grupo();
 
--- Trigger para insertar Texto
+
+---------------------------------------------------------------
+-- Validar aceptación de amistad SOLO si hubo notificación previa
+---------------------------------------------------------------
+CREATE OR REPLACE FUNCTION validar_amistad_aceptada()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.estado = 'aceptada' THEN
+        IF NOT EXISTS (
+            SELECT 1
+            FROM Notificaciones n
+            WHERE 
+                n.tipo = 'solicitud_amistad'
+                AND (
+                    (n.username_origen = NEW.username_1 AND n.username_destino = NEW.username_2)
+                    OR
+                    (n.username_origen = NEW.username_2 AND n.username_destino = NEW.username_1)
+                )
+        ) THEN
+            RAISE EXCEPTION 'No se puede aceptar amistad sin solicitud previa';
+        END IF;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_validar_amistad_aceptada
+BEFORE INSERT OR UPDATE ON Amistades
+FOR EACH ROW
+EXECUTE FUNCTION validar_amistad_aceptada();
+
+
+---------------------------------------------------------------
+-- Notificación por solicitud de amistad
+---------------------------------------------------------------
+CREATE OR REPLACE FUNCTION trg_notif_solicitud_amistad()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.estado = 'pendiente' THEN
+        INSERT INTO Notificaciones (username_destino, username_origen, tipo)
+        VALUES (NEW.username_2, NEW.username_1, 'solicitud_amistad');
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER notificar_solicitud_amistad
+AFTER INSERT ON Amistades
+FOR EACH ROW
+EXECUTE FUNCTION trg_notif_solicitud_amistad();
+
+
+---------------------------------------------------------------
+-- Notificación por aceptación de amistad
+---------------------------------------------------------------
+CREATE OR REPLACE FUNCTION trg_notif_aceptacion_amistad()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF OLD.estado = 'pendiente' AND NEW.estado = 'aceptada' THEN
+        INSERT INTO Notificaciones (username_destino, username_origen, tipo)
+        VALUES (NEW.username_1, NEW.username_2, 'amistad_aceptada');
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER notificar_aceptacion_amistad
+AFTER UPDATE ON Amistades
+FOR EACH ROW
+EXECUTE FUNCTION trg_notif_aceptacion_amistad();
+
+
+---------------------------------------------------------------
+-- TRIGGERS DE CREACIÓN AUTOMÁTICA DE PUBLICACIONES
+---------------------------------------------------------------
+
+-- Textos
 CREATE OR REPLACE FUNCTION insertar_publicacion_texto_func()
 RETURNS TRIGGER AS $$
 BEGIN
-    -- Crea una Publicacion usando el texto y el id_usuario del registro nuevo (NEW)
-    INSERT INTO Publicaciones (id_publicacion, id_usuario, id_grupo)
-    VALUES (NEW.id_publicacion, NEW.id_usuario, NEW.id_grupo); 
+    INSERT INTO Publicaciones (id_publicacion, username, nombre_grupo)
+    VALUES (NEW.id_publicacion, NEW.username, NEW.nombre_grupo);
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -71,13 +152,13 @@ BEFORE INSERT ON Textos
 FOR EACH ROW
 EXECUTE FUNCTION insertar_publicacion_texto_func();
 
--- Trigger para insertar Imagen 
+
+-- Imágenes
 CREATE OR REPLACE FUNCTION insertar_publicacion_imagen_func()
 RETURNS TRIGGER AS $$
 BEGIN
-    -- Crea una Publicacion usando 'Imagen publicada' como contenido y la URL de la imagen (NEW)
-    INSERT INTO Publicaciones (id_publicacion, id_usuario, id_grupo)
-    VALUES (NEW.id_publicacion, NEW.id_usuario, NEW.id_grupo);
+    INSERT INTO Publicaciones (id_publicacion, username, nombre_grupo)
+    VALUES (NEW.id_publicacion, NEW.username, NEW.nombre_grupo);
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -87,13 +168,13 @@ BEFORE INSERT ON Imagenes
 FOR EACH ROW
 EXECUTE FUNCTION insertar_publicacion_imagen_func();
 
--- Trigger para insertar Video
+
+-- Videos
 CREATE OR REPLACE FUNCTION insertar_publicacion_video_func()
 RETURNS TRIGGER AS $$
 BEGIN
-    -- Crea una Publicacion usando 'Video publicado' como contenido y la URL del video (NEW)
-    INSERT INTO Publicaciones (id_publicacion, id_usuario, id_grupo)
-    VALUES (NEW.id_publicacion, NEW.id_usuario, NEW.id_grupo);
+    INSERT INTO Publicaciones (id_publicacion, username, nombre_grupo)
+    VALUES (NEW.id_publicacion, NEW.username, NEW.nombre_grupo);
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -103,182 +184,97 @@ BEFORE INSERT ON Videos
 FOR EACH ROW
 EXECUTE FUNCTION insertar_publicacion_video_func();
 
--- Triggers para DELETES que llaman a la misma funcion 
+
+---------------------------------------------------------------
+-- TRIGGER para eliminar publicaciones al borrar medios
+---------------------------------------------------------------
 CREATE OR REPLACE FUNCTION eliminar_publicacion_func()
 RETURNS TRIGGER AS $$
 BEGIN
-    -- Elimina la Publicacion usando la clave de la fila eliminada (OLD)
     DELETE FROM Publicaciones
     WHERE id_publicacion = OLD.id_publicacion;
-    
-    -- Los triggers BEFORE DELETE requieren devolver OLD.
-    RETURN OLD; 
+    RETURN OLD;
 END;
 $$ LANGUAGE plpgsql;
 
--- Triggers de Eliminación que llaman a la misma función
 CREATE TRIGGER eliminar_publicacion_texto
-BEFORE DELETE ON Textos
+AFTER DELETE ON Textos
 FOR EACH ROW
 EXECUTE FUNCTION eliminar_publicacion_func();
 
 CREATE TRIGGER eliminar_publicacion_imagen
-BEFORE DELETE ON Imagenes
+AFTER DELETE ON Imagenes
 FOR EACH ROW
 EXECUTE FUNCTION eliminar_publicacion_func();
 
 CREATE TRIGGER eliminar_publicacion_video
-BEFORE DELETE ON Videos
+AFTER DELETE ON Videos
 FOR EACH ROW
 EXECUTE FUNCTION eliminar_publicacion_func();
 
--- Triggers para notificaciones
-CREATE OR REPLACE FUNCTION notificaciones_amistad_trigger()
-RETURNS TRIGGER AS $$
-DECLARE
-    v_id_evento INT;
-BEGIN
-    -- 1. Crear el evento único
-    INSERT INTO Eventos_Notificacion (tipo_evento)
-    VALUES ('amistad')
-    RETURNING id_evento INTO v_id_evento; -- Capturar el ID generado
-
-    -- 2. Asignar ese ID a la fila hija
-    NEW.id_evento := v_id_evento;
-
-    -- 3. Crear la alerta individual (1:1)
-    INSERT INTO Notificaciones (id_usuario, id_evento)
-    VALUES (NEW.id_usuario_receptor, v_id_evento);
-
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER tr_insert_notificaciones_amistad
-BEFORE INSERT ON Notificaciones_Amistad
-FOR EACH ROW
-EXECUTE FUNCTION notificaciones_amistad_trigger();
-
-CREATE OR REPLACE FUNCTION notificaciones_publicacion_trigger()
-RETURNS TRIGGER AS $$
-DECLARE
-    v_id_evento INT;
-    v_id_usuario_receptor INT;
-BEGIN
-    -- 1. Crear el evento único
-    INSERT INTO Eventos_Notificacion (tipo_evento)
-    VALUES ('publicacion')
-    RETURNING id_evento INTO v_id_evento; -- Capturar el ID generado
-
-    -- 2. Asignar ese ID a la fila hija
-    NEW.id_evento := v_id_evento;
-
-    -- 3. Obtener el ID del usuario receptor (Dueño de la publicación)
-    -- Asumiendo que la tabla Publicaciones tiene el id_usuario del creador
-    SELECT id_usuario INTO v_id_usuario_receptor
-    FROM Publicaciones
-    WHERE id_publicacion = NEW.id_publicacion;
-    
-    -- 4. Crear la alerta individual (1:1)
-    INSERT INTO Notificaciones (id_usuario, id_evento)
-    VALUES (v_id_usuario_receptor, v_id_evento);
-
-    -- 5. Permitir que la inserción en la tabla de detalles proceda
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE TRIGGER tr_insert_notificaciones_publicacion
-BEFORE INSERT ON Notificaciones_Publicacion
-FOR EACH ROW
-EXECUTE FUNCTION notificaciones_publicacion_trigger();
 
 
-CREATE OR REPLACE FUNCTION notificaciones_grupo_trigger()
-RETURNS TRIGGER AS $$
-DECLARE
-    v_id_evento INT;
-    miembro_id INT;
-BEGIN
-    -- 1. Crear el evento único
-    INSERT INTO Eventos_Notificacion (tipo_evento)
-    VALUES ('grupo')
-    RETURNING id_evento INTO v_id_evento;
-
-    -- 2. Asignar ese ID a la fila hija (detalles del grupo)
-    NEW.id_evento := v_id_evento;
-
-    -- 3. Crear múltiples alertas individuales (1:N)
-    FOR miembro_id IN
-        -- Asumiendo la tabla Usuarios_Grupos
-        SELECT id_usuario
-        FROM Usuarios_Grupos 
-        WHERE id_grupo = NEW.id_grupo
-    LOOP
-        INSERT INTO Notificaciones (id_usuario, id_evento)
-        VALUES (miembro_id, v_id_evento);
-    END LOOP;
-    
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER tr_insert_notificaciones_grupo
-BEFORE INSERT ON Notificaciones_Grupo
-FOR EACH ROW
-EXECUTE FUNCTION notificaciones_grupo_trigger();
-
--- ===========================
+-- ============================================================
 -- CONSULTAS
--- ===========================
+-- ============================================================
 
--- Registrar un usuario.
-INSERT INTO Usuarios (id_usuario, username, email, fecha_de_nacimiento, nombre, apellido, pais) VALUES
-(7, 'Valen', 'valentinoceniceros@gmail.com', '2001-11-11', 'Valentino', 'Ceniceros', 'Argentina');
 
--- Listar todos los usuarios de la red social.
-SELECT
-    id_usuario,
-    username,
-    nombre,
-    apellido,
-    pais
+---------------------------------------------------------------
+-- Registrar un usuario
+---------------------------------------------------------------
+INSERT INTO Usuarios (username, email, fecha_de_nacimiento, nombre, apellido, pais)
+VALUES ('vcecen', 'valentinoceniceros@gmail.com', '2001-11-11', 'Valentino', 'Ceniceros', 'Argentina');
+
+
+---------------------------------------------------------------
+-- Listar todos los usuarios
+---------------------------------------------------------------
+SELECT username, nombre, apellido, pais
 FROM Usuarios;
 
--- Listar todas las amistades de la red social.
-SELECT
-    a.id_usuario1,
-    u.nombre,
-    u.apellido,
-    a.id_usuario2,
-    u2.nombre,
-    u2.apellido
-FROM Amistades a
-JOIN Usuarios u ON a.id_usuario1 = u.id_usuario
-JOIN Usuarios u2 ON a.id_usuario2 = u2.id_usuario;
 
--- Listar los amigos de un usuario particular de la red social.
+---------------------------------------------------------------
+-- Listar todas las amistades aceptadas
+---------------------------------------------------------------
 SELECT
-    u.id_usuario,
+    a.username_1,
+    u.nombre AS nombre_1,
+    u.apellido AS apellido_1,
+    a.username_2,
+    u2.nombre AS nombre_2,
+    u2.apellido AS apellido_2
+FROM Amistades a
+JOIN Usuarios u  ON a.username_1 = u.username
+JOIN Usuarios u2 ON a.username_2 = u2.username
+WHERE a.estado = 'aceptada';
+
+---------------------------------------------------------------
+-- Listar amigos de un usuario en particular
+---------------------------------------------------------------
+SELECT
     u.username,
     u.nombre,
     u.apellido,
     u.pais
 FROM Usuarios u
-WHERE u.id_usuario IN (
-    SELECT
-        CASE
-            WHEN a.id_usuario1 = CURRENT_USER THEN a.id_usuario2
-            ELSE a.id_usuario1
-        END AS amigo_id
+WHERE u.username IN (
+    SELECT CASE
+               WHEN a.username_1 = 'bpezman' THEN a.username_2
+               ELSE a.username_1
+           END
     FROM Amistades a
-    WHERE CURRENT_USER IN (a.id_usuario1, a.id_usuario2)
+    WHERE 'bpezman' IN (a.username_1, a.username_2)
+      AND a.estado = 'aceptada'
 );
 
--- Listar todos los mensajes de la red social.
+---------------------------------------------------------------
+-- Listar todos los mensajes
+---------------------------------------------------------------
 SELECT * FROM Mensajes;
 
--- Contabilizar la cantidad de usuarios, agrupados por país.
+---------------------------------------------------------------
+-- Cantidad de usuarios agrupados por país
+---------------------------------------------------------------
 SELECT 
     pais,
     COUNT(*) AS cantidad_usuarios
@@ -286,70 +282,67 @@ FROM Usuarios
 GROUP BY pais
 ORDER BY cantidad_usuarios DESC;
 
--- Realizar una publicación (dar un ejemplo de cada tipo).
-INSERT INTO Textos (id_publicacion, id_usuario, texto)
-VALUES (1, 1, '¡Hola a todos! Probando mi primera publicación de texto.');
 
-INSERT INTO Imagenes (id_publicacion, id_usuario, url_imagen)
-VALUES (3, 3, 'http://imagenes.com/mi_escritorio.jpg');
+---------------------------------------------------------------
+-- Ejemplos de publicación
+---------------------------------------------------------------
+INSERT INTO Textos (id_publicacion, username, texto)
+VALUES (20, 'bpezman', '¡Hola a todos! Primera publicación.');
 
-INSERT INTO Videos (id_publicacion, id_usuario, url_video, duracion, calidad)
-VALUES (5, 5, 'http://videos.com/receta_express.mp4', 180, '720p');
+INSERT INTO Imagenes (id_publicacion, username, url_imagen)
+VALUES (21, 'mlopez', 'http://imagenes.com/ejemplo.jpg');
 
--- Actualizar una publicación (dar un ejemplo de cada tipo).
--- Actualiza Texto (Publicacion 1)
+INSERT INTO Videos (id_publicacion, username, url_video, duracion, calidad)
+VALUES (22, 'jperez', 'http://videos.com/video.mp4', 5, '720p');
+
+
+---------------------------------------------------------------
+-- Actualizar publicaciones
+---------------------------------------------------------------
 UPDATE Textos
-SET texto = '¡Actualización! Agrego más detalles sobre mi día.',
-    id_usuario = 1 -- Si se permite actualizar id_usuario, si no, se mantiene
-WHERE id_publicacion = 1;
+SET texto = 'Texto actualizado.'
+WHERE id_publicacion = 20;
 
--- Actualiza Imagen (Publicacion 3)
 UPDATE Imagenes
-SET url_imagen = 'http://example.com/atardecer_nuevo.jpg'
-WHERE id_publicacion = 3;
+SET url_imagen = 'http://imagenes.com/actualizada.jpg'
+WHERE id_publicacion = 21;
 
--- Actualiza Video (Publicacion 5)
 UPDATE Videos
-SET url_video = 'http://videos.com/receta_full.mp4', duracion = 360, calidad = '1080p'
-WHERE id_publicacion = 5;
+SET url_video = 'http://videos.com/video_nuevo.mp4',
+    duracion = 6,
+    calidad = '1080p'
+WHERE id_publicacion = 22;
 
--- El trigger actualizar_publicacion_imagen/video debería actualizar el campo 'url' de Publicaciones
-SELECT id_publicacion FROM Publicaciones WHERE id_publicacion IN (1, 3, 5);
 
--- Elimina Texto (Publicacion 2) -> Dispara eliminar_publicacion_texto
-DELETE FROM Textos WHERE id_publicacion = 2;
+---------------------------------------------------------------
+-- Eliminar publicaciones
+---------------------------------------------------------------
+DELETE FROM Textos   WHERE id_publicacion = 20;
+DELETE FROM Imagenes WHERE id_publicacion = 21;
+DELETE FROM Videos   WHERE id_publicacion = 22;
 
--- Elimina Imagen (Publicacion 4) -> Dispara eliminar_publicacion_imagen
-DELETE FROM Imagenes WHERE id_publicacion = 4;
-
--- Elimina Video (Publicacion 6) -> Dispara eliminar_publicacion_video
-DELETE FROM Videos WHERE id_publicacion = 6;
-
--- Verificamos que las Publicaciones 2, 4 y 6 hayan sido eliminadas
-SELECT id_publicacion FROM Publicaciones WHERE id_publicacion IN (2, 4, 6);
-
--- Desregistrar a un usuario de la aplicación (dar un ejemplo).
-DELETE FROM Usuarios WHERE id_usuario = 5;
-
--- Mostrar las publicaciones más populares ordenadas por cantidad de “favoritos” que poseen.
+---------------------------------------------------------------
+-- Publicaciones más populares
+---------------------------------------------------------------
 SELECT
     p.id_publicacion,
-    COUNT(f.id_publicacion) AS cantidad_de_favoritos,
-    p.id_usuario
+    COUNT(f.id_publicacion) AS cantidad_favoritos,
+    p.username
 FROM Publicaciones p
 LEFT JOIN Favoritos f ON p.id_publicacion = f.id_publicacion
-GROUP BY p.id_publicacion, p.id_usuario
-ORDER BY cantidad_de_favoritos DESC;
+GROUP BY p.id_publicacion, p.username
+ORDER BY cantidad_favoritos DESC;
 
--- Mostrar los usuarios más populares basandose en la cantidad de publicaciones “favoritas” que poseen sus publicaciones.
+---------------------------------------------------------------
+-- Usuarios más populares por favoritos
+---------------------------------------------------------------
 SELECT
-    u.id_usuario,
     u.username,
     u.nombre,
     u.apellido,
     COUNT(f.id_publicacion) AS total_favoritos
 FROM Usuarios u
-JOIN Publicaciones p ON u.id_usuario = p.id_usuario
+JOIN Publicaciones p ON u.username = p.username
 LEFT JOIN Favoritos f ON p.id_publicacion = f.id_publicacion
-GROUP BY u.id_usuario, u.username, u.nombre, u.apellido
+GROUP BY u.username, u.nombre, u.apellido
 ORDER BY total_favoritos DESC;

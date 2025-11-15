@@ -1,96 +1,134 @@
-INSERT INTO Paises (nombre_pais) VALUES
+----------------------------------------------
+-- PAISES
+----------------------------------------------
+INSERT INTO Paises (nombre_pais)
+VALUES
 ('Argentina'),
 ('Chile'),
-('Mexico'),
-('España'),
-('Colombia');
+('Uruguay'),
+('Brasil');
 
-INSERT INTO Usuarios (id_usuario, username, email, fecha_de_nacimiento, nombre, apellido, pais) VALUES
-(1, 'bruno', 'brunopezman@mail.com', '1995-07-15', 'Bruno', 'Pezman', 'Argentina'),
-(2, 'carla', 'carlalopez@mail.com', '1998-03-20', 'Carla', 'Lopez', 'Chile'),
-(3, 'david', 'davidgomez@mail.com', '1990-11-05', 'David', 'Gomez', 'Mexico'),
-(4, 'elena', 'elenasanchez@mail.com', '2001-01-25', 'Elena', 'Sanchez', 'España'),
-(5, 'felipe', 'felipediaz@mail.com', '1985-09-10', 'Felipe', 'Diaz', 'Colombia');
+----------------------------------------------
+-- USUARIOS
+----------------------------------------------
+INSERT INTO Usuarios (username, email, fecha_de_nacimiento, nombre, apellido, pais, cantidad_de_ingresos)
+VALUES
+('bpezman',    'bruno@correo.com',   '2000-05-10', 'Bruno',   'Pezman',    'Argentina', 3),
+('mlopez',     'mariana@correo.com', '1998-11-23', 'Mariana', 'Lopez',     'Chile',     5),
+('jperez',     'juan@correo.com',    '1995-03-15', 'Juan',    'Perez',     'Uruguay',   2),
+('arodriguez', 'ana@correo.com',     '2001-07-30', 'Ana',     'Rodriguez', 'Argentina', 1),
+('cfernandez', 'carlos@correo.com',  '1999-09-12', 'Carlos',  'Fernandez', 'Brasil',    9);
 
-INSERT INTO Grupos (id_grupo, nombre_grupo, descripcion) VALUES
-(101, 'Ricoteros', 'Fundamentalistas del aire acondicionado'),
-(102, 'Programadores LATAM', 'Consultas y tips de código');
+----------------------------------------------
+-- GRUPOS
+----------------------------------------------
+INSERT INTO Grupos (nombre_grupo, id_creador, descripcion)
+VALUES
+('Fotografía',        'bpezman',    'Grupo para compartir fotos'),
+('Cocina Creativa',   'mlopez',     'Recetas y platos'),
+('Viajes y Aventuras','jperez',     'Experiencias alrededor del mundo');
 
-INSERT INTO Usuarios_Grupos (id_usuario, id_grupo) VALUES
-(1, 101),
-(2, 101),
-(3, 102),
-(4, 102),
-(5, 101);
+----------------------------------------------
+-- USUARIOS_GRUPOS
+----------------------------------------------
+INSERT INTO Usuarios_Grupos (username, nombre_grupo)
+VALUES
+('bpezman', 'Fotografía'),
+('mlopez',  'Fotografía'),
+('arodriguez', 'Fotografía'),
 
--- ID 1
-INSERT INTO Textos (id_publicacion, id_usuario, texto)
-VALUES (1, 1, '¡Hola a todos! Probando mi primera publicación de texto.');
+('mlopez',  'Cocina Creativa'),
+('jperez',  'Cocina Creativa'),
+('cfernandez', 'Cocina Creativa'),
 
--- ID 2
-INSERT INTO Textos (id_publicacion, id_usuario, id_grupo, texto)
-VALUES (2, 2, 101, '¿Alguien vio la nueva película de ciencia ficción? Recomendaciones...');
+('bpezman', 'Viajes y Aventuras'),
+('jperez', 'Viajes y Aventuras'),
+('cfernandez', 'Viajes y Aventuras');
 
--- ID 3
-INSERT INTO Imagenes (id_publicacion, id_usuario, url_imagen)
-VALUES (3, 3, 'http://imagenes.com/mi_escritorio.jpg');
+----------------------------------------------
+-- AMISTADES
+-- Todas aceptadas
+----------------------------------------------
+INSERT INTO Amistades (username_1, username_2, estado)
+VALUES
+('bpezman', 'mlopez', 'aceptada'),
+('bpezman', 'jperez', 'aceptada'),
+('mlopez', 'arodriguez', 'aceptada'),
+('jperez', 'cfernandez', 'aceptada');
 
--- ID 4
-INSERT INTO Imagenes (id_publicacion, id_usuario, id_grupo, url_imagen)
-VALUES (4, 4, 102, 'http://imagenes.com/diagrama_db.png');
+----------------------------------------------
+-- PUBLICACIONES  (IDs 1–6)
+----------------------------------------------
+INSERT INTO Publicaciones (id_publicacion, username, nombre_grupo)
+VALUES
+(1, 'bpezman', NULL),
+(2, 'mlopez', 'Fotografía'),
+(3, 'jperez', NULL),
+(4, 'arodriguez', 'Cocina Creativa'),
+(5, 'cfernandez', NULL),
+(6, 'mlopez', 'Viajes y Aventuras');
 
--- ID 5
-INSERT INTO Videos (id_publicacion, id_usuario, url_video, duracion, calidad)
-VALUES (5, 5, 'http://videos.com/receta_express.mp4', 180, '720p');
+----------------------------------------------
+-- IMAGENES
+----------------------------------------------
+INSERT INTO Imagenes (id_publicacion, username, nombre_grupo, url_imagen)
+VALUES
+(1, 'bpezman', NULL, 'http://imagenes.com/foto1.jpg'),
+(2, 'mlopez', 'Fotografía', 'http://imagenes.com/foto_grupo1.jpg');
 
--- ID 6
-INSERT INTO Videos (id_publicacion, id_usuario, url_video, duracion, calidad)
-VALUES (6, 1, 'http://videos.com/viaje_sur.mp4', 600, '1080p');
+----------------------------------------------
+-- TEXTOS
+----------------------------------------------
+INSERT INTO Textos (id_publicacion, username, nombre_grupo, texto)
+VALUES
+(3, 'jperez', NULL, 'Hoy es un gran día para aprender SQL.'),
+(4, 'arodriguez', 'Cocina Creativa', 'Nueva receta de pasta casera.');
 
-INSERT INTO Favoritos (id_usuario, id_publicacion) VALUES
-(2, 1),
-(3, 1), -- Publicación 1 (Texto de Bruno): 3 favoritos
-(4, 1),
-(1, 3),
-(2, 3), -- Publicación 3 (Imagen de David): 2 favoritos
-(5, 5); -- Publicación 5 (Video de Felipe): 1 favorito
+----------------------------------------------
+-- VIDEOS
+----------------------------------------------
+INSERT INTO Videos (id_publicacion, username, nombre_grupo, url_video, duracion, calidad)
+VALUES
+(5, 'cfernandez', NULL, 'http://videos.com/clip1.mp4', 5, '720p'),
+(6, 'mlopez', 'Viajes y Aventuras', 'http://videos.com/viaje.mp4', 7, '1080p');
 
-INSERT INTO Comentarios (id_comentario, id_publicacion, id_usuario, contenido) VALUES
-(1, 1, 2, '¡Excelente post, Bruno!'),
-(2, 3, 1, 'Genial la foto.'),
-(3, 5, 2, 'Buena receta, voy a probarla.'),
-(4, 5, 4, 'Me encanta el 720p, buena calidad.');
+----------------------------------------------
+-- COMENTARIOS (id_autogenerados)
+----------------------------------------------
+INSERT INTO Comentarios (id_publicacion, username, contenido)
+VALUES
+(1, 'mlopez', '¡Gran foto Bruno!'),
+(3, 'bpezman', 'Totalmente de acuerdo.'),
+(4, 'cfernandez', 'Me encanta esa receta.'),
+(6, 'jperez', 'Quiero ir a ese lugar.');
 
-INSERT INTO Mensajes (id_mensaje, id_usuario_emisor, id_usuario_receptor, estado, contenido) VALUES
-(1, 1, 2, 'leido', 'Hola Carla, ¿cómo estás?'),
-(2, 2, 1, 'no_leido', '¡Hola Bruno! Todo bien, ¿y tú?'),
-(3, 3, 4, 'leido', 'Revisa el código que te envié.'),
-(4, 4, 3, 'no_leido', 'Lo reviso ahora, gracias.');
+----------------------------------------------
+-- NOTIFICACIONES (id_autogenerados)
+----------------------------------------------
+INSERT INTO Notificaciones (username_destino, username_origen, tipo)
+VALUES
+('mlopez', 'bpezman', 'amistad'),
+('jperez', 'bpezman', 'nueva_publicacion'),
+('bpezman', 'mlopez', 'publicacion_grupo'),
+('cfernandez', 'jperez', 'amistad'),
+('jperez', 'mlopez', 'publicacion_grupo');
 
-INSERT INTO Notificaciones (id_notificacion, id_usuario) VALUES
-(10, 1), -- Para Bruno
-(11, 1), -- Para Bruno
-(12, 3), -- Para David
-(13, 4); -- Para Elena
+----------------------------------------------
+-- MENSAJES (id_autogenerados)
+----------------------------------------------
+INSERT INTO Mensajes (username_emisor, username_receptor, estado, contenido)
+VALUES
+('bpezman', 'mlopez', 'leido', 'Hola Mariana, ¿cómo estás?'),
+('mlopez', 'bpezman', 'no_leido', 'Todo bien Bruno, ¿vos?'),
+('jperez', 'cfernandez', 'no_leido', '¿Te gustó mi comentario?');
 
--- Notificación amistad de carla a bruno
-INSERT INTO Notificaciones_Amistad (id_evento, id_usuario_solicitante, id_usuario_receptor, estado) VALUES
-(10, 2, 1, 'pendiente');
-
-INSERT INTO Notificaciones_Amistad (id_evento, id_usuario_solicitante, id_usuario_receptor, estado) VALUES
-(15, 3, 5, 'aceptada');
-
--- Amistad de David y Felipe se crea ya que el estado de su notificación de amistad es 'aceptada
-INSERT INTO Amistades (id_usuario1, id_usuario2) VALUES
-(3, 5); -- David y Felipe
-
--- Notificación 11: Like (para Bruno)
-INSERT INTO Notificaciones_Publicacion (id_evento, id_usuario_publicador, id_publicacion, tipo) VALUES
-(11, 3, 1, 'like');
-
--- Notificación 12: Comentario (para David)
-INSERT INTO Notificaciones_Publicacion (id_evento, id_usuario_publicador, id_publicacion, tipo) VALUES
-(12, 2, 3, 'comentario');
-
-INSERT INTO Notificaciones_Grupo (id_evento, id_grupo, mensaje) VALUES
-(13,102, '¡Nueva reunión de programadores el próximo viernes!');
+----------------------------------------------
+-- FAVORITOS
+----------------------------------------------
+INSERT INTO Favoritos (username, id_publicacion)
+VALUES
+('bpezman', 2),
+('bpezman', 3),
+('mlopez', 1),
+('jperez', 4),
+('cfernandez', 6);
