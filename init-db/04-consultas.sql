@@ -8,17 +8,17 @@
 CREATE OR REPLACE FUNCTION trg_notif_publicacion_amigos()
 RETURNS TRIGGER AS $$
 BEGIN
-    INSERT INTO Notificaciones (username_destino, username_origen, tipo)
+    INSERT INTO Notificaciones (nombre_usuario_destino, nombre_usuario_origen, tipo)
     SELECT 
         CASE 
-            WHEN a.username_1 = NEW.username THEN a.username_2
-            ELSE a.username_1
+            WHEN a.nombre_usuario_1 = NEW.nombre_usuario THEN a.nombre_usuario_2
+            ELSE a.nombre_usuario_1
         END AS amigo,
-        NEW.username,
+        NEW.nombre_usuario,
         'nueva_publicacion_amigo'
     FROM Amistades a
     WHERE 
-        (a.username_1 = NEW.username OR a.username_2 = NEW.username)
+        (a.nombre_usuario_1 = NEW.nombre_usuario OR a.nombre_usuario_2 = NEW.nombre_usuario)
         AND a.estado = 'aceptada';
 
     RETURN NEW;
@@ -38,15 +38,15 @@ CREATE OR REPLACE FUNCTION trg_notif_publicacion_grupo()
 RETURNS TRIGGER AS $$
 BEGIN
     IF NEW.nombre_grupo IS NOT NULL THEN
-        INSERT INTO Notificaciones (username_destino, username_origen, tipo)
+        INSERT INTO Notificaciones (nombre_usuario_destino, nombre_usuario_origen, tipo)
         SELECT 
-            ug.username,
-            NEW.username,
+            ug.nombre_usuario,
+            NEW.nombre_usuario,
             'nueva_publicacion_grupo'
         FROM Usuarios_Grupos ug
         WHERE 
             ug.nombre_grupo = NEW.nombre_grupo
-            AND ug.username <> NEW.username;
+            AND ug.nombre_usuario <> NEW.nombre_usuario;
     END IF;
 
     RETURN NEW;
@@ -72,9 +72,9 @@ BEGIN
             WHERE 
                 n.tipo = 'solicitud_amistad'
                 AND (
-                    (n.username_origen = NEW.username_1 AND n.username_destino = NEW.username_2)
+                    (n.nombre_usuario_origen = NEW.nombre_usuario_1 AND n.nombre_usuario_destino = NEW.nombre_usuario_2)
                     OR
-                    (n.username_origen = NEW.username_2 AND n.username_destino = NEW.username_1)
+                    (n.nombre_usuario_origen = NEW.nombre_usuario_2 AND n.nombre_usuario_destino = NEW.nombre_usuario_1)
                 )
         ) THEN
             RAISE EXCEPTION 'No se puede aceptar amistad sin solicitud previa';
@@ -98,8 +98,8 @@ CREATE OR REPLACE FUNCTION trg_notif_solicitud_amistad()
 RETURNS TRIGGER AS $$
 BEGIN
     IF NEW.estado = 'pendiente' THEN
-        INSERT INTO Notificaciones (username_destino, username_origen, tipo)
-        VALUES (NEW.username_2, NEW.username_1, 'solicitud_amistad');
+        INSERT INTO Notificaciones (nombre_usuario_destino, nombre_usuario_origen, tipo)
+        VALUES (NEW.nombre_usuario_2, NEW.nombre_usuario_1, 'solicitud_amistad');
     END IF;
 
     RETURN NEW;
@@ -119,8 +119,8 @@ CREATE OR REPLACE FUNCTION trg_notif_aceptacion_amistad()
 RETURNS TRIGGER AS $$
 BEGIN
     IF OLD.estado = 'pendiente' AND NEW.estado = 'aceptada' THEN
-        INSERT INTO Notificaciones (username_destino, username_origen, tipo)
-        VALUES (NEW.username_1, NEW.username_2, 'amistad_aceptada');
+        INSERT INTO Notificaciones (nombre_usuario_destino, nombre_usuario_origen, tipo)
+        VALUES (NEW.nombre_usuario_1, NEW.nombre_usuario_2, 'amistad_aceptada');
     END IF;
 
     RETURN NEW;
@@ -141,8 +141,8 @@ EXECUTE FUNCTION trg_notif_aceptacion_amistad();
 CREATE OR REPLACE FUNCTION insertar_publicacion_texto_func()
 RETURNS TRIGGER AS $$
 BEGIN
-    INSERT INTO Publicaciones (id_publicacion, username, nombre_grupo)
-    VALUES (NEW.id_publicacion, NEW.username, NEW.nombre_grupo);
+    INSERT INTO Publicaciones (id_publicacion, nombre_usuario, nombre_grupo)
+    VALUES (NEW.id_publicacion, NEW.nombre_usuario, NEW.nombre_grupo);
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -157,8 +157,8 @@ EXECUTE FUNCTION insertar_publicacion_texto_func();
 CREATE OR REPLACE FUNCTION insertar_publicacion_imagen_func()
 RETURNS TRIGGER AS $$
 BEGIN
-    INSERT INTO Publicaciones (id_publicacion, username, nombre_grupo)
-    VALUES (NEW.id_publicacion, NEW.username, NEW.nombre_grupo);
+    INSERT INTO Publicaciones (id_publicacion, nombre_usuario, nombre_grupo)
+    VALUES (NEW.id_publicacion, NEW.nombre_usuario, NEW.nombre_grupo);
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -173,8 +173,8 @@ EXECUTE FUNCTION insertar_publicacion_imagen_func();
 CREATE OR REPLACE FUNCTION insertar_publicacion_video_func()
 RETURNS TRIGGER AS $$
 BEGIN
-    INSERT INTO Publicaciones (id_publicacion, username, nombre_grupo)
-    VALUES (NEW.id_publicacion, NEW.username, NEW.nombre_grupo);
+    INSERT INTO Publicaciones (id_publicacion, nombre_usuario, nombre_grupo)
+    VALUES (NEW.id_publicacion, NEW.nombre_usuario, NEW.nombre_grupo);
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -222,14 +222,14 @@ EXECUTE FUNCTION eliminar_publicacion_func();
 ---------------------------------------------------------------
 -- Registrar un usuario
 ---------------------------------------------------------------
-INSERT INTO Usuarios (username, email, fecha_de_nacimiento, nombre, apellido, pais)
+INSERT INTO Usuarios (nombre_usuario, email, fecha_de_nacimiento, nombre, apellido, pais)
 VALUES ('vcecen', 'valentinoceniceros@gmail.com', '2001-11-11', 'Valentino', 'Ceniceros', 'Argentina');
 
 
 ---------------------------------------------------------------
 -- Listar todos los usuarios
 ---------------------------------------------------------------
-SELECT username, nombre, apellido, pais
+SELECT nombre_usuario, nombre, apellido, pais
 FROM Usuarios;
 
 
@@ -237,33 +237,33 @@ FROM Usuarios;
 -- Listar todas las amistades aceptadas
 ---------------------------------------------------------------
 SELECT
-    a.username_1,
+    a.nombre_usuario_1,
     u.nombre AS nombre_1,
     u.apellido AS apellido_1,
-    a.username_2,
+    a.nombre_usuario_2,
     u2.nombre AS nombre_2,
     u2.apellido AS apellido_2
 FROM Amistades a
-JOIN Usuarios u  ON a.username_1 = u.username
-JOIN Usuarios u2 ON a.username_2 = u2.username
+JOIN Usuarios u  ON a.nombre_usuario_1 = u.nombre_usuario
+JOIN Usuarios u2 ON a.nombre_usuario_2 = u2.nombre_usuario
 WHERE a.estado = 'aceptada';
 
 ---------------------------------------------------------------
 -- Listar amigos de un usuario en particular
 ---------------------------------------------------------------
 SELECT
-    u.username,
+    u.nombre_usuario,
     u.nombre,
     u.apellido,
     u.pais
 FROM Usuarios u
-WHERE u.username IN (
+WHERE u.nombre_usuario IN (
     SELECT CASE
-               WHEN a.username_1 = 'bpezman' THEN a.username_2
-               ELSE a.username_1
+               WHEN a.nombre_usuario_1 = 'bpezman' THEN a.nombre_usuario_2
+               ELSE a.nombre_usuario_1
            END
     FROM Amistades a
-    WHERE 'bpezman' IN (a.username_1, a.username_2)
+    WHERE 'bpezman' IN (a.nombre_usuario_1, a.nombre_usuario_2)
       AND a.estado = 'aceptada'
 );
 
@@ -286,13 +286,13 @@ ORDER BY cantidad_usuarios DESC;
 ---------------------------------------------------------------
 -- Ejemplos de publicación
 ---------------------------------------------------------------
-INSERT INTO Textos (id_publicacion, username, texto)
+INSERT INTO Textos (id_publicacion, nombre_usuario, texto)
 VALUES (20, 'bpezman', '¡Hola a todos! Primera publicación.');
 
-INSERT INTO Imagenes (id_publicacion, username, url_imagen)
+INSERT INTO Imagenes (id_publicacion, nombre_usuario, url_imagen)
 VALUES (21, 'mlopez', 'http://imagenes.com/ejemplo.jpg');
 
-INSERT INTO Videos (id_publicacion, username, url_video, duracion, calidad)
+INSERT INTO Videos (id_publicacion, nombre_usuario, url_video, duracion, calidad)
 VALUES (22, 'jperez', 'http://videos.com/video.mp4', 5, '720p');
 
 
@@ -327,22 +327,22 @@ DELETE FROM Videos   WHERE id_publicacion = 22;
 SELECT
     p.id_publicacion,
     COUNT(f.id_publicacion) AS cantidad_favoritos,
-    p.username
+    p.nombre_usuario
 FROM Publicaciones p
 LEFT JOIN Favoritos f ON p.id_publicacion = f.id_publicacion
-GROUP BY p.id_publicacion, p.username
+GROUP BY p.id_publicacion, p.nombre_usuario
 ORDER BY cantidad_favoritos DESC;
 
 ---------------------------------------------------------------
 -- Usuarios más populares por favoritos
 ---------------------------------------------------------------
 SELECT
-    u.username,
+    u.nombre_usuario,
     u.nombre,
     u.apellido,
     COUNT(f.id_publicacion) AS total_favoritos
 FROM Usuarios u
-JOIN Publicaciones p ON u.username = p.username
+JOIN Publicaciones p ON u.nombre_usuario = p.nombre_usuario
 LEFT JOIN Favoritos f ON p.id_publicacion = f.id_publicacion
-GROUP BY u.username, u.nombre, u.apellido
+GROUP BY u.nombre_usuario, u.nombre, u.apellido
 ORDER BY total_favoritos DESC;

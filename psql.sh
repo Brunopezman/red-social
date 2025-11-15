@@ -70,7 +70,7 @@ echo "==============================="
 echo ""
 echo "Ejemplos para conectarse:"
 echo " - Como admin: docker exec -it $CONTAINER_NAME psql -U admin_role -d $POSTGRES_DB"
-echo " - Como usuario: docker exec -it $CONTAINER_NAME psql -U <username> -d $POSTGRES_DB"
+echo " - Como usuario: docker exec -it $CONTAINER_NAME psql -U <nombre_usuario> -d $POSTGRES_DB"
 echo ""
 
 # ===========================
