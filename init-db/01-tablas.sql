@@ -74,56 +74,35 @@ CREATE TABLE IF NOT EXISTS Comentarios(
     FOREIGN KEY (id_usuario) REFERENCES Usuarios(id_usuario) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS Amistades(
-    id_usuario1 INT NOT NULL,
-    id_usuario2 INT NOT NULL,
-    fecha_de_amistad TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (id_usuario1, id_usuario2),
-    CHECK (id_usuario1 <> id_usuario2),
-    FOREIGN KEY (id_usuario1) REFERENCES Usuarios(id_usuario) ON DELETE CASCADE,
-    FOREIGN KEY (id_usuario2) REFERENCES Usuarios(id_usuario) ON DELETE CASCADE
+CREATE TABLE IF NOT EXISTS Amistades (
+    id_amistad        SERIAL PRIMARY KEY,
+    id_usuario_1      INT NOT NULL,
+    id_usuario_2      INT NOT NULL,
+    estado            VARCHAR(10) NOT NULL CHECK (estado IN ('pendiente', 'aceptada', 'rechazada')),
+    fecha_solicitud   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (id_usuario_1) REFERENCES Usuarios(id_usuario),
+    FOREIGN KEY (id_usuario_2) REFERENCES Usuarios(id_usuario),
+    
+    -- Sugerencia: Añadir para evitar que un usuario se auto-solicite amistad
+    CHECK (id_usuario_1 <> id_usuario_2)
 );
 
-CREATE TABLE IF NOT EXISTS Eventos_Notificacion (
-    id_evento	SERIAL	PRIMARY KEY,
-    tipo_evento	VARCHAR(20)	NOT NULL CHECK (tipo_evento IN ('amistad', 'publicacion', 'grupo')),
-    fecha_creacion	TIMESTAMP	DEFAULT CURRENT_TIMESTAMP
+-- Este índice garantiza la unicidad para pares (A,B) y (B,A)
+CREATE UNIQUE INDEX idx_amistad_par_unico ON Amistades (
+    LEAST(id_usuario_1, id_usuario_2),
+    GREATEST(id_usuario_1, id_usuario_2)
 );
 
-CREATE TABLE IF NOT EXISTS Notificaciones(
-    id_notificacion SERIAL PRIMARY KEY,
-    id_usuario INT NOT NULL,
-    id_evento INT,
-    FOREIGN KEY (id_usuario) REFERENCES Usuarios(id_usuario) ON DELETE CASCADE,
-    FOREIGN KEY (id_evento) REFERENCES Eventos_Notificacion(id_evento) ON DELETE CASCADE
-);
+CREATE TABLE IF NOT EXISTS Notificaciones (
+    id_notificacion      SERIAL PRIMARY KEY,
+    id_usuario_destino   INT NOT NULL,
+    id_usuario_origen    INT,
+    tipo                 VARCHAR(30) NOT NULL,
+    fecha                TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-CREATE TABLE IF NOT EXISTS Notificaciones_Amistad(
-    id_evento INT PRIMARY KEY,
-    id_usuario_solicitante INT NOT NULL,
-    id_usuario_receptor INT NOT NULL,
-    fecha_de_solicitud TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    estado VARCHAR(20) DEFAULT 'pendiente' CHECK (estado IN ('pendiente', 'aceptada', 'rechazada')),
-    FOREIGN KEY (id_evento) REFERENCES Eventos_Notificacion(id_evento) ON DELETE CASCADE,
-    FOREIGN KEY (id_usuario_solicitante) REFERENCES Usuarios(id_usuario) ON DELETE CASCADE,
-    FOREIGN KEY (id_usuario_receptor) REFERENCES Usuarios(id_usuario) ON DELETE CASCADE
-);
-
-CREATE TABLE IF NOT EXISTS Notificaciones_Publicacion(
-    id_evento INT PRIMARY KEY,
-    id_usuario_publicador INT NOT NULL,
-    id_publicacion INT NOT NULL,
-    tipo VARCHAR(20) NOT NULL CHECK (tipo IN ('like', 'comentario')),
-    FOREIGN KEY (id_evento) REFERENCES Eventos_Notificacion(id_evento) ON DELETE CASCADE,
-    FOREIGN KEY (id_publicacion) REFERENCES Publicaciones(id_publicacion) ON DELETE CASCADE,
-    FOREIGN KEY (id_usuario_publicador) REFERENCES Usuarios(id_usuario) ON DELETE CASCADE
-);
-
-CREATE TABLE IF NOT EXISTS Notificaciones_Grupo (
-    id_evento INT PRIMARY KEY,
-    id_grupo INT NOT NULL,
-    mensaje VARCHAR(300) NOT NULL,
-    FOREIGN KEY (id_evento) REFERENCES Eventos_Notificacion(id_evento) ON DELETE CASCADE
+    FOREIGN KEY (id_usuario_destino) REFERENCES Usuarios(id_usuario),
+    FOREIGN KEY (id_usuario_origen)  REFERENCES Usuarios(id_usuario)
 );
 
 CREATE TABLE IF NOT EXISTS Mensajes(

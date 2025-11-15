@@ -67,30 +67,12 @@ INSERT INTO Mensajes (id_mensaje, id_usuario_emisor, id_usuario_receptor, estado
 (3, 3, 4, 'leido', 'Revisa el código que te envié.'),
 (4, 4, 3, 'no_leido', 'Lo reviso ahora, gracias.');
 
-INSERT INTO Notificaciones (id_notificacion, id_usuario) VALUES
+INSERT INTO Notificaciones (id_notificacion, id_usuario, tipo) VALUES
 (10, 1), -- Para Bruno
 (11, 1), -- Para Bruno
 (12, 3), -- Para David
 (13, 4); -- Para Elena
 
--- Notificación amistad de carla a bruno
-INSERT INTO Notificaciones_Amistad (id_evento, id_usuario_solicitante, id_usuario_receptor, estado) VALUES
-(10, 2, 1, 'pendiente');
-
-INSERT INTO Notificaciones_Amistad (id_evento, id_usuario_solicitante, id_usuario_receptor, estado) VALUES
-(15, 3, 5, 'aceptada');
-
 -- Amistad de David y Felipe se crea ya que el estado de su notificación de amistad es 'aceptada
 INSERT INTO Amistades (id_usuario1, id_usuario2) VALUES
-(3, 5); -- David y Felipe
-
--- Notificación 11: Like (para Bruno)
-INSERT INTO Notificaciones_Publicacion (id_evento, id_usuario_publicador, id_publicacion, tipo) VALUES
-(11, 3, 1, 'like');
-
--- Notificación 12: Comentario (para David)
-INSERT INTO Notificaciones_Publicacion (id_evento, id_usuario_publicador, id_publicacion, tipo) VALUES
-(12, 2, 3, 'comentario');
-
-INSERT INTO Notificaciones_Grupo (id_evento, id_grupo, mensaje) VALUES
-(13,102, '¡Nueva reunión de programadores el próximo viernes!');
+(3, 5, 'aceptada'); -- David y Felipe
