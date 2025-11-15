@@ -34,23 +34,19 @@ EXECUTE FUNCTION verificar_notificacion_amistad();
 CREATE OR REPLACE FUNCTION normalizar_amistad()
 RETURNS TRIGGER AS $$
 DECLARE
-    -- Declaramos la variable temporal DENTRO del cuerpo principal de la función
     temp_id INT;
 BEGIN
-    -- 1. Verificar si la relación está en orden inverso (Ej: INSERT (20, 10))
+    -- 1. Verificar si la relación está en orden inverso
     IF NEW.id_usuario1 > NEW.id_usuario2 THEN
 
-        -- 2. Realizar el intercambio de valores
+        -- 2. Realizar el intercambio de valores para normalizar
         temp_id := NEW.id_usuario1;
         NEW.id_usuario1 := NEW.id_usuario2;
         NEW.id_usuario2 := temp_id;
-    RAISE EXCEPTION 'Ya existe una amistad entre ambos usuarios';
+
     END IF;
 
-    -- 3. Si la relación ya existe (ej: (10, 20)),
-    -- la clave primaria lanzará el error al intentar insertar (10, 20) nuevamente.
-
-    RETURN NEW; -- Devolver la nueva fila (posiblemente normalizada)
+    RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
