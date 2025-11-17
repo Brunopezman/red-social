@@ -109,7 +109,13 @@ CREATE TABLE IF NOT EXISTS Notificaciones (
     id_notificacion SERIAL PRIMARY KEY,
     nombre_usuario_destino VARCHAR(100) NOT NULL,
     nombre_usuario_origen VARCHAR(100),
-    tipo VARCHAR(30) NOT NULL,
+    tipo VARCHAR(30) NOT NULL CHECK(tipo IN (
+        'nueva_publicacion_amigo',
+        'nueva_publicacion_grupo',
+        'pendiente',
+        'aceptada',
+        'rechazada'
+    )),
     fecha TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     FOREIGN KEY (nombre_usuario_destino) REFERENCES Usuarios(nombre_usuario),

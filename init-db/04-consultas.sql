@@ -8,9 +8,10 @@
 -- Registrar un usuario
 ---------------------------------------------------------------
 INSERT INTO Usuarios (nombre_usuario, email, fecha_de_nacimiento, nombre, apellido, pais)
-VALUES ('vcecen', 'valentinoceniceros@gmail.com', '2001-11-11', 'Valentino', 'Ceniceros', 'Argentina');
+VALUES ('ceni', 'valentinoceniceros@gmail.com', '2001-11-11', 'Valentino', 'Ceniceros', 'Argentina');
 
-
+CREATE USER ceni WITH LOGIN PASSWORD 'valen1234';
+GRANT user_role TO ceni;
 ---------------------------------------------------------------
 -- Listar todos los usuarios
 ---------------------------------------------------------------

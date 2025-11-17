@@ -17,7 +17,7 @@ GRANT INSERT ON Publicaciones, Imagenes, Videos, Textos,
     Grupos, Mensajes, Comentarios, Favoritos, Usuarios_Grupos, Amistades, Notificaciones
 TO user_role;
 
-GRANT UPDATE ON Imagenes, Videos, Textos, Comentarios, Mensajes
+GRANT UPDATE ON Imagenes, Videos, Textos, Comentarios, Mensajes, notificaciones
 TO user_role;
 
 GRANT DELETE ON Publicaciones, Imagenes, Videos, Textos,
@@ -68,7 +68,8 @@ CREATE POLICY ug_delete_own ON Usuarios_Grupos FOR DELETE TO user_role USING (no
 
 
 CREATE POLICY noti_select_own ON Notificaciones FOR SELECT TO user_role USING (nombre_usuario_destino = CURRENT_USER);
-CREATE POLICY noti_insert_own ON Notificaciones FOR INSERT TO user_role WITH CHECK (nombre_usuario_destino = CURRENT_USER); -- Asume que el usuario inserta notificaciones para sí mismo (destino)
+CREATE POLICY noti_insert_own ON Notificaciones FOR INSERT TO user_role WITH CHECK (nombre_usuario_origen = CURRENT_USER); -- Asume que el usuario inserta notificaciones para sí mismo (destino)
+CREATE POLICY noti_update_own ON notificaciones FOR UPDATE TO user_role WITH CHECK (nombre_usuario_destino = CURRENT_USER);
 
 CREATE POLICY noti_admin_all ON Notificaciones FOR ALL TO admin_role USING (TRUE) WITH CHECK (TRUE);
 CREATE POLICY noti_insert_admin ON Notificaciones FOR INSERT TO admin_role WITH CHECK (TRUE);
@@ -97,5 +98,10 @@ CREATE POLICY grp_insert_any ON Grupos FOR INSERT TO user_role WITH CHECK (id_cr
 CREATE POLICY grp_update_own ON Grupos FOR UPDATE TO user_role USING (id_creador = CURRENT_USER) WITH CHECK (id_creador = CURRENT_USER);
 CREATE POLICY grp_delete_own ON Grupos FOR DELETE TO user_role USING (id_creador = CURRENT_USER);
 CREATE POLICY grp_admin_all ON Grupos FOR ALL TO admin_role USING (TRUE) WITH CHECK (TRUE);
+
+CREATE POLICY user_insert_admin
+  ON public.usuarios
+  FOR INSERT TO admin_role
+  WITH CHECK (TRUE);
 
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO admin_role;
