@@ -321,6 +321,13 @@ DELETE FROM Textos   WHERE id_publicacion = 20;
 DELETE FROM Imagenes WHERE id_publicacion = 21;
 DELETE FROM Videos   WHERE id_publicacion = 22;
 
+
+---------------------------------------------------------------
+-- Desregistrar a un usuario de la aplicación
+---------------------------------------------------------------
+DELETE FROM Usuarios WHERE nombre_usuario = 'mlopez';
+
+
 ---------------------------------------------------------------
 -- Publicaciones más populares
 ---------------------------------------------------------------
