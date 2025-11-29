@@ -105,22 +105,56 @@ CREATE UNIQUE INDEX idx_amistad_par_unico ON Amistades (
     GREATEST(nombre_usuario_1, nombre_usuario_2)
 );
 
-CREATE TABLE IF NOT EXISTS Notificaciones (
-    id_notificacion SERIAL PRIMARY KEY,
+
+CREATE TABLE IF NOT EXISTS Notificaciones(
+    id_notificaciones SERIAL PRIMARY KEY,
+    fecha TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS Notificacion_amistad(
+    nombre_usuario_origen VARCHAR(100) NOT NULL,
     nombre_usuario_destino VARCHAR(100) NOT NULL,
-    nombre_usuario_origen VARCHAR(100),
+    tipo VARCHAR(30) NOT NULL CHECK(tipo IN (
+        'aceptada',
+        'rechazada',
+        'pendiente')),
+    id_notificacion SERIAL NOT NULL,
+    FOREIGN KEY (id_notificacion) REFERENCES Notificaciones(id_notificaciones),
+    FOREIGN KEY (nombre_usuario_destino) REFERENCES Usuarios(nombre_usuario),
+    FOREIGN KEY (nombre_usuario_origen)  REFERENCES Usuarios(nombre_usuario),
+    PRIMARY KEY (id_notificacion, nombre_usuario_origen, nombre_usuario_destino)
+);
+
+CREATE TABLE IF NOT EXISTS Notificacion_publicacion(
+    nombre_usuario_origen VARCHAR(100) NOT NULL,
+    nombre_usuario_destino VARCHAR(100) NOT NULL,
     tipo VARCHAR(30) NOT NULL CHECK(tipo IN (
         'nueva_publicacion_amigo',
-        'nueva_publicacion_grupo',
-        'pendiente',
-        'aceptada',
-        'rechazada'
-    )),
-    fecha TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
+        'nueva_publicacion_grupo')),
+    id_notificacion SERIAL NOT NULL,
+    FOREIGN KEY (id_notificacion) REFERENCES Notificaciones(id_notificaciones),
     FOREIGN KEY (nombre_usuario_destino) REFERENCES Usuarios(nombre_usuario),
-    FOREIGN KEY (nombre_usuario_origen)  REFERENCES Usuarios(nombre_usuario)
+    FOREIGN KEY (nombre_usuario_origen)  REFERENCES Usuarios(nombre_usuario),
+    PRIMARY KEY (id_notificacion, nombre_usuario_origen, nombre_usuario_destino)
 );
+
+
+-- CREATE TABLE IF NOT EXISTS Notificaciones (
+--     id_notificacion SERIAL PRIMARY KEY,
+--     nombre_usuario_destino VARCHAR(100) NOT NULL,
+--     nombre_usuario_origen VARCHAR(100),
+--     tipo VARCHAR(30) NOT NULL CHECK(tipo IN (
+--         'nueva_publicacion_amigo',
+--         'nueva_publicacion_grupo',
+--         'pendiente',
+--         'aceptada',
+--         'rechazada'
+--     )),
+--     fecha TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+--
+--     FOREIGN KEY (nombre_usuario_destino) REFERENCES Usuarios(nombre_usuario),
+--     FOREIGN KEY (nombre_usuario_origen)  REFERENCES Usuarios(nombre_usuario)
+-- );
 
 CREATE TABLE IF NOT EXISTS Mensajes(
     id_mensaje SERIAL PRIMARY KEY,
@@ -153,19 +187,36 @@ CREATE TABLE IF NOT EXISTS Favoritos(
 ---------------------------------------------------------------
 CREATE OR REPLACE FUNCTION trg_notif_publicacion_amigos()
 RETURNS TRIGGER AS $$
+DECLARE
+    notif_id INT;
+    AMIGO RECORD;
 BEGIN
-    INSERT INTO Notificaciones (nombre_usuario_destino, nombre_usuario_origen, tipo)
-    SELECT
-        CASE
-            WHEN a.nombre_usuario_1 = NEW.nombre_usuario THEN a.nombre_usuario_2
-            ELSE a.nombre_usuario_1
-        END AS amigo,
-        NEW.nombre_usuario,
-        'nueva_publicacion_amigo'
-    FROM Amistades a
-    WHERE
-        (a.nombre_usuario_1 = NEW.nombre_usuario OR a.nombre_usuario_2 = NEW.nombre_usuario)
-        AND a.estado = 'aceptada';
+    FOR amigo IN
+        SELECT
+            CASE
+                WHEN a.nombre_usuario_1 = NEW.nombre_usuario THEN a.nombre_usuario_2
+                ELSE a.nombre_usuario_1
+            END AS nombre_amigo
+        FROM Amistades a
+        WHERE (a.nombre_usuario_1 = NEW.nombre_usuario OR a.nombre_usuario_2 = NEW.nombre_usuario)
+          AND a.estado = 'aceptada'
+    LOOP
+        INSERT INTO Notificaciones DEFAULT VALUES
+        RETURNING id_notificaciones INTO notif_id;
+
+        INSERT INTO Notificacion_publicacion(
+            nombre_usuario_origen,
+            nombre_usuario_destino,
+            tipo,
+            id_notificacion
+        )
+        VALUES (
+            NEW.nombre_usuario,
+            amigo.nombre_amigo,
+            'nueva_publicacion_amigo',
+            notif_id
+        );
+    END LOOP;
 
     RETURN NEW;
 END;
@@ -182,17 +233,33 @@ EXECUTE FUNCTION trg_notif_publicacion_amigos();
 ---------------------------------------------------------------
 CREATE OR REPLACE FUNCTION trg_notif_publicacion_grupo()
 RETURNS TRIGGER AS $$
+DECLARE
+    notif_id INT;
+    miembro RECORD;
 BEGIN
     IF NEW.nombre_grupo IS NOT NULL THEN
-        INSERT INTO Notificaciones (nombre_usuario_destino, nombre_usuario_origen, tipo)
-        SELECT
-            ug.nombre_usuario,
-            NEW.nombre_usuario,
-            'nueva_publicacion_grupo'
-        FROM Usuarios_Grupos ug
-        WHERE
-            ug.nombre_grupo = NEW.nombre_grupo
-            AND ug.nombre_usuario <> NEW.nombre_usuario;
+        FOR miembro IN
+            SELECT ug.nombre_usuario
+            FROM Usuarios_Grupos ug
+            WHERE ug.nombre_grupo = NEW.nombre_grupo
+              AND ug.nombre_usuario <> NEW.nombre_usuario
+        LOOP
+            INSERT INTO Notificaciones DEFAULT VALUES
+            RETURNING id_notificaciones INTO notif_id;
+
+            INSERT INTO Notificacion_publicacion(
+                nombre_usuario_origen,
+                nombre_usuario_destino,
+                tipo,
+                id_notificacion
+            )
+            VALUES (
+                NEW.nombre_usuario,
+                miembro.nombre_usuario,
+                'nueva_publicacion_grupo',
+                notif_id
+            );
+        END LOOP;
     END IF;
 
     RETURN NEW;
@@ -214,14 +281,13 @@ BEGIN
     IF NEW.estado = 'aceptada' THEN
         IF NOT EXISTS (
             SELECT 1
-            FROM Notificaciones n
-            WHERE
-                n.tipo = 'solicitud_amistad'
-                AND (
-                    (n.nombre_usuario_origen = NEW.nombre_usuario_1 AND n.nombre_usuario_destino = NEW.nombre_usuario_2)
-                    OR
-                    (n.nombre_usuario_origen = NEW.nombre_usuario_2 AND n.nombre_usuario_destino = NEW.nombre_usuario_1)
-                )
+            FROM Notificacion_amistad na
+            WHERE na.tipo = 'pendiente'
+              AND (
+                  (na.nombre_usuario_origen = NEW.nombre_usuario_1 AND na.nombre_usuario_destino = NEW.nombre_usuario_2)
+                  OR
+                  (na.nombre_usuario_origen = NEW.nombre_usuario_2 AND na.nombre_usuario_destino = NEW.nombre_usuario_1)
+              )
         ) THEN
             RAISE EXCEPTION 'No se puede aceptar amistad sin solicitud previa';
         END IF;
@@ -242,10 +308,25 @@ EXECUTE FUNCTION validar_amistad_aceptada();
 ---------------------------------------------------------------
 CREATE OR REPLACE FUNCTION trg_notif_solicitud_amistad()
 RETURNS TRIGGER AS $$
+DECLARE
+    notif_id INT;
 BEGIN
     IF NEW.estado = 'pendiente' THEN
-        INSERT INTO Notificaciones (nombre_usuario_destino, nombre_usuario_origen, tipo)
-        VALUES (NEW.nombre_usuario_2, NEW.nombre_usuario_1, 'solicitud_amistad');
+        INSERT INTO Notificaciones DEFAULT VALUES
+        RETURNING id_notificaciones INTO notif_id;
+
+        INSERT INTO Notificacion_amistad(
+            nombre_usuario_origen,
+            nombre_usuario_destino,
+            tipo,
+            id_notificacion
+        )
+        VALUES (
+            NEW.nombre_usuario_1,
+            NEW.nombre_usuario_2,
+            'pendiente',
+            notif_id
+        );
     END IF;
 
     RETURN NEW;
@@ -258,15 +339,31 @@ FOR EACH ROW
 EXECUTE FUNCTION trg_notif_solicitud_amistad();
 
 
+
 ---------------------------------------------------------------
 -- Notificación por aceptación de amistad
 ---------------------------------------------------------------
 CREATE OR REPLACE FUNCTION trg_notif_aceptacion_amistad()
 RETURNS TRIGGER AS $$
+DECLARE
+    notif_id INT;
 BEGIN
     IF OLD.estado = 'pendiente' AND NEW.estado = 'aceptada' THEN
-        INSERT INTO Notificaciones (nombre_usuario_destino, nombre_usuario_origen, tipo)
-        VALUES (NEW.nombre_usuario_1, NEW.nombre_usuario_2, 'amistad_aceptada');
+        INSERT INTO Notificaciones DEFAULT VALUES
+        RETURNING id_notificaciones INTO notif_id;
+
+        INSERT INTO Notificacion_amistad(
+            nombre_usuario_origen,
+            nombre_usuario_destino,
+            tipo,
+            id_notificacion
+        )
+        VALUES (
+            NEW.nombre_usuario_2,  -- quien acepta
+            NEW.nombre_usuario_1,  -- quien recibe confirmación
+            'aceptada',
+            notif_id
+        );
     END IF;
 
     RETURN NEW;
@@ -277,6 +374,37 @@ CREATE TRIGGER notificar_aceptacion_amistad
 AFTER UPDATE ON Amistades
 FOR EACH ROW
 EXECUTE FUNCTION trg_notif_aceptacion_amistad();
+
+
+---------------------------------------------------------------
+-- Sincronizar estado de amistad desde notificación
+---------------------------------------------------------------
+
+CREATE OR REPLACE FUNCTION trg_sync_amistad_desde_notif()
+RETURNS TRIGGER AS $$
+BEGIN
+
+    IF OLD.tipo = 'pendiente' AND NEW.tipo = 'aceptada' THEN
+
+        UPDATE Amistades
+        SET estado = 'aceptada'
+        WHERE
+            (nombre_usuario_1 = NEW.nombre_usuario_origen
+             AND nombre_usuario_2 = NEW.nombre_usuario_destino)
+        OR
+            (nombre_usuario_1 = NEW.nombre_usuario_destino
+             AND nombre_usuario_2 = NEW.nombre_usuario_origen);
+
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER sync_amistad_desde_notif
+AFTER UPDATE ON Notificacion_amistad
+FOR EACH ROW
+EXECUTE FUNCTION trg_sync_amistad_desde_notif();
 
 
 ---------------------------------------------------------------
