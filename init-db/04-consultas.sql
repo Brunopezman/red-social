@@ -10,14 +10,13 @@
 INSERT INTO Usuarios (nombre_usuario, email, fecha_de_nacimiento, nombre, apellido, pais)
 VALUES ('ceni', 'valentinoceniceros@gmail.com', '2001-11-11', 'Valentino', 'Ceniceros', 'Argentina');
 
-CREATE USER ceni WITH LOGIN PASSWORD 'valen1234';
-GRANT user_role TO ceni;
+CREATE ROLE ceni LOGIN IN ROLE user_role PASSWORD 'ceni123';
+
 ---------------------------------------------------------------
 -- Listar todos los usuarios
 ---------------------------------------------------------------
 SELECT nombre_usuario, nombre, apellido, pais
 FROM Usuarios;
-
 
 ---------------------------------------------------------------
 -- Listar todas las amistades aceptadas
