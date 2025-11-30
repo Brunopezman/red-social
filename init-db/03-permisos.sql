@@ -62,16 +62,16 @@ CREATE POLICY usuarios_select ON Usuarios
 
 CREATE POLICY usuarios_insert ON Usuarios
   FOR INSERT TO user_role
-  WITH CHECK (nombre_usuario = current_user);
+  WITH CHECK (nombre_usuario = session_user);
 
 CREATE POLICY usuarios_update ON Usuarios
   FOR UPDATE TO user_role
-  USING (nombre_usuario = current_user)
-  WITH CHECK (nombre_usuario = current_user);
+  USING (nombre_usuario = session_user)
+  WITH CHECK (nombre_usuario = session_user);
 
 CREATE POLICY usuarios_delete ON Usuarios
   FOR DELETE TO user_role
-  USING (nombre_usuario = current_user);
+  USING (nombre_usuario = session_user);
 
 
 ------------------------------------------------------------
@@ -84,16 +84,16 @@ CREATE POLICY grupos_select ON Grupos
 
 CREATE POLICY grupos_insert ON Grupos
   FOR INSERT TO user_role
-  WITH CHECK (id_creador = current_user);
+  WITH CHECK (id_creador = session_user);
 
 CREATE POLICY grupos_update ON Grupos
   FOR UPDATE TO user_role
-  USING (id_creador = current_user)
-  WITH CHECK (id_creador = current_user);
+  USING (id_creador = session_user)
+  WITH CHECK (id_creador = session_user);
 
 CREATE POLICY grupos_delete ON Grupos
   FOR DELETE TO user_role
-  USING (id_creador = current_user);
+  USING (id_creador = session_user);
 
 
 ------------------------------------------------------------
@@ -106,16 +106,16 @@ CREATE POLICY publicaciones_select ON Publicaciones
 
 CREATE POLICY publicaciones_insert ON Publicaciones
   FOR INSERT TO user_role
-  WITH CHECK (nombre_usuario = current_user);
+  WITH CHECK (nombre_usuario = session_user);
 
 CREATE POLICY publicaciones_update ON Publicaciones
   FOR UPDATE TO user_role
-  USING (nombre_usuario = current_user)
-  WITH CHECK (nombre_usuario = current_user);
+  USING (nombre_usuario = session_user)
+  WITH CHECK (nombre_usuario = session_user);
 
 CREATE POLICY publicaciones_delete ON Publicaciones
   FOR DELETE TO user_role
-  USING (nombre_usuario = current_user);
+  USING (nombre_usuario = session_user);
 
 
 ------------------------------------------------------------
@@ -128,16 +128,16 @@ CREATE POLICY imagenes_select ON Imagenes
 
 CREATE POLICY imagenes_insert ON Imagenes
   FOR INSERT TO user_role
-  WITH CHECK (nombre_usuario = current_user);
+  WITH CHECK (nombre_usuario = session_user);
 
 CREATE POLICY imagenes_update ON Imagenes
   FOR UPDATE TO user_role
-  USING (nombre_usuario = current_user)
-  WITH CHECK (nombre_usuario = current_user);
+  USING (nombre_usuario = session_user)
+  WITH CHECK (nombre_usuario = session_user);
 
 CREATE POLICY imagenes_delete ON Imagenes
   FOR DELETE TO user_role
-  USING (nombre_usuario = current_user);
+  USING (nombre_usuario = session_user);
 
 
 ------------------------------------------------------------
@@ -150,16 +150,16 @@ CREATE POLICY textos_select ON Textos
 
 CREATE POLICY textos_insert ON Textos
   FOR INSERT TO user_role
-  WITH CHECK (nombre_usuario = current_user);
+  WITH CHECK (nombre_usuario = session_user);
 
 CREATE POLICY textos_update ON Textos
   FOR UPDATE TO user_role
-  USING (nombre_usuario = current_user)
-  WITH CHECK (nombre_usuario = current_user);
+  USING (nombre_usuario = session_user)
+  WITH CHECK (nombre_usuario = session_user);
 
 CREATE POLICY textos_delete ON Textos
   FOR DELETE TO user_role
-  USING (nombre_usuario = current_user);
+  USING (nombre_usuario = session_user);
 
 
 ------------------------------------------------------------
@@ -172,16 +172,16 @@ CREATE POLICY videos_select ON Videos
 
 CREATE POLICY videos_insert ON Videos
   FOR INSERT TO user_role
-  WITH CHECK (nombre_usuario = current_user);
+  WITH CHECK (nombre_usuario = session_user);
 
 CREATE POLICY videos_update ON Videos
   FOR UPDATE TO user_role
-  USING (nombre_usuario = current_user)
-  WITH CHECK (nombre_usuario = current_user);
+  USING (nombre_usuario = session_user)
+  WITH CHECK (nombre_usuario = session_user);
 
 CREATE POLICY videos_delete ON Videos
   FOR DELETE TO user_role
-  USING (nombre_usuario = current_user);
+  USING (nombre_usuario = session_user);
 
 
 ------------------------------------------------------------
@@ -194,11 +194,11 @@ CREATE POLICY ug_select ON Usuarios_Grupos
 
 CREATE POLICY ug_insert ON Usuarios_Grupos
   FOR INSERT TO user_role
-  WITH CHECK (nombre_usuario = current_user);
+  WITH CHECK (nombre_usuario = session_user);
 
 CREATE POLICY ug_delete ON Usuarios_Grupos
   FOR DELETE TO user_role
-  USING (nombre_usuario = current_user);
+  USING (nombre_usuario = session_user);
 
 
 ------------------------------------------------------------
@@ -211,16 +211,16 @@ CREATE POLICY comentarios_select ON Comentarios
 
 CREATE POLICY comentarios_insert ON Comentarios
   FOR INSERT TO user_role
-  WITH CHECK (nombre_usuario = current_user);
+  WITH CHECK (nombre_usuario = session_user);
 
 CREATE POLICY comentarios_update ON Comentarios
   FOR UPDATE TO user_role
-  USING (nombre_usuario = current_user)
-  WITH CHECK (nombre_usuario = current_user);
+  USING (nombre_usuario = session_user)
+  WITH CHECK (nombre_usuario = session_user);
 
 CREATE POLICY comentarios_delete ON Comentarios
   FOR DELETE TO user_role
-  USING (nombre_usuario = current_user);
+  USING (nombre_usuario = session_user);
 
 
 ------------------------------------------------------------
@@ -231,30 +231,30 @@ ALTER TABLE Amistades ENABLE ROW LEVEL SECURITY;
 CREATE POLICY amistades_select ON Amistades
   FOR SELECT TO user_role
   USING (
-    current_user = nombre_usuario_1 OR 
-    current_user = nombre_usuario_2
+    session_user = nombre_usuario_1 OR 
+    session_user = nombre_usuario_2
   );
 
 CREATE POLICY amistades_insert ON Amistades
   FOR INSERT TO user_role
-  WITH CHECK (nombre_usuario_1 = current_user);
+  WITH CHECK (nombre_usuario_1 = session_user);
 
 CREATE POLICY amistades_update ON Amistades
   FOR UPDATE TO user_role
   USING (
-    current_user = nombre_usuario_1 OR 
-    current_user = nombre_usuario_2
+    session_user = nombre_usuario_1 OR 
+    session_user = nombre_usuario_2
   )
   WITH CHECK (
-    current_user = nombre_usuario_1 OR 
-    current_user = nombre_usuario_2
+    session_user = nombre_usuario_1 OR 
+    session_user = nombre_usuario_2
   );
 
 CREATE POLICY amistades_delete ON Amistades
   FOR DELETE TO user_role
   USING (
-    current_user = nombre_usuario_1 OR 
-    current_user = nombre_usuario_2
+    session_user = nombre_usuario_1 OR 
+    session_user = nombre_usuario_2
   );
 
 
@@ -265,7 +265,7 @@ ALTER TABLE Notificaciones ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY notificaciones_select ON Notificaciones
   FOR SELECT TO user_role
-  USING (nombre_usuario_destino = current_user);
+  USING (nombre_usuario_destino = session_user);
 
 CREATE POLICY notificaciones_insert ON Notificaciones
   FOR INSERT TO user_role
@@ -273,12 +273,12 @@ CREATE POLICY notificaciones_insert ON Notificaciones
 
 CREATE POLICY notificaciones_update ON Notificaciones
   FOR UPDATE TO user_role
-  USING (nombre_usuario_destino = current_user)
-  WITH CHECK (nombre_usuario_destino = current_user);
+  USING (nombre_usuario_destino = session_user)
+  WITH CHECK (nombre_usuario_destino = session_user);
 
 CREATE POLICY notificaciones_delete ON Notificaciones
   FOR DELETE TO user_role
-  USING (nombre_usuario_destino = current_user);
+  USING (nombre_usuario_destino = session_user);
 
 
 ------------------------------------------------------------
@@ -289,30 +289,30 @@ ALTER TABLE Mensajes ENABLE ROW LEVEL SECURITY;
 CREATE POLICY mensajes_select ON Mensajes
   FOR SELECT TO user_role
   USING (
-    current_user = nombre_usuario_emisor OR
-    current_user = nombre_usuario_receptor
+    session_user = nombre_usuario_emisor OR
+    session_user = nombre_usuario_receptor
   );
 
 CREATE POLICY mensajes_insert ON Mensajes
   FOR INSERT TO user_role
-  WITH CHECK (nombre_usuario_emisor = current_user);
+  WITH CHECK (nombre_usuario_emisor = session_user);
 
 CREATE POLICY mensajes_update ON Mensajes
   FOR UPDATE TO user_role
   USING (
-    current_user = nombre_usuario_emisor OR 
-    current_user = nombre_usuario_receptor
+    session_user = nombre_usuario_emisor OR 
+    session_user = nombre_usuario_receptor
   )
   WITH CHECK (
-    current_user = nombre_usuario_emisor OR 
-    current_user = nombre_usuario_receptor
+    session_user = nombre_usuario_emisor OR 
+    session_user = nombre_usuario_receptor
   );
 
 CREATE POLICY mensajes_delete ON Mensajes
   FOR DELETE TO user_role
   USING (
-    current_user = nombre_usuario_emisor OR 
-    current_user = nombre_usuario_receptor
+    session_user = nombre_usuario_emisor OR 
+    session_user = nombre_usuario_receptor
   );
 
 
@@ -326,9 +326,9 @@ CREATE POLICY fav_select ON Favoritos
 
 CREATE POLICY fav_insert ON Favoritos
   FOR INSERT TO user_role
-  WITH CHECK (nombre_usuario = current_user);
+  WITH CHECK (nombre_usuario = session_user);
 
 CREATE POLICY fav_delete ON Favoritos
   FOR DELETE TO user_role
-  USING (nombre_usuario = current_user);
+  USING (nombre_usuario = session_user);
 

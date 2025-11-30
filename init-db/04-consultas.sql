@@ -12,6 +12,13 @@ VALUES ('ceni', 'valentinoceniceros@gmail.com', '2001-11-11', 'Valentino', 'Ceni
 
 CREATE ROLE ceni LOGIN IN ROLE user_role PASSWORD 'ceni123';
 
+CREATE ROLE bpezman LOGIN IN ROLE user_role PASSWORD 'bruno123';
+
+INSERT INTO Amistades (nombre_usuario_1, nombre_usuario_2, estado)
+VALUES ('ceni', 'bpezman', 'pendiente');
+
+UPDATE Amistades SET estado = 'aceptada'
+WHERE (nombre_usuario_1 = 'ceni' AND nombre_usuario_2 = 'bpezman');
 ---------------------------------------------------------------
 -- Listar todos los usuarios
 ---------------------------------------------------------------

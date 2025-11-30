@@ -149,35 +149,34 @@ CREATE TABLE IF NOT EXISTS Favoritos(
 -- ============================================================
 
 ---------------------------------------------------------------
--- Validar aceptación de amistad SOLO si hubo notificación previa
+-- Validar aceptación de amistad:
 ---------------------------------------------------------------
 CREATE OR REPLACE FUNCTION validar_amistad_aceptada()
 RETURNS TRIGGER AS $$
 BEGIN
-    IF NEW.estado = 'aceptada' THEN
+    IF TG_OP = 'INSERT' AND NEW.estado = 'aceptada' THEN
+        RAISE EXCEPTION 'Las amistades deben ser insertadas con estado "pendiente"';
+    END IF;
+
+    IF TG_OP = 'UPDATE' AND NEW.estado = 'aceptada' THEN
+        IF OLD.estado <> 'pendiente' THEN
+            RAISE EXCEPTION 'Solo se puede aceptar una amistad que está en estado "pendiente" (Estado actual: %)', OLD.estado;
+        END IF;
         IF NOT EXISTS (
             SELECT 1
             FROM Notificaciones n
             WHERE
-                n.tipo = 'solicitud_amistad'
-                AND (
-                    (n.nombre_usuario_origen = NEW.nombre_usuario_1 AND n.nombre_usuario_destino = NEW.nombre_usuario_2)
-                    OR
-                    (n.nombre_usuario_origen = NEW.nombre_usuario_2 AND n.nombre_usuario_destino = NEW.nombre_usuario_1)
-                )
+                n.tipo = 'pendiente' 
+                AND n.nombre_usuario_origen = NEW.nombre_usuario_1
+                AND n.nombre_usuario_destino = NEW.nombre_usuario_2
         ) THEN
-            RAISE EXCEPTION 'No se puede aceptar amistad sin solicitud previa';
+            RAISE EXCEPTION 'No se puede aceptar amistad sin solicitud previa (Notificación pendiente no encontrada)';
         END IF;
     END IF;
 
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-
-CREATE TRIGGER trg_validar_amistad_aceptada
-BEFORE INSERT OR UPDATE ON Amistades
-FOR EACH ROW
-EXECUTE FUNCTION validar_amistad_aceptada();
 
 
 ---------------------------------------------------------------
@@ -188,7 +187,7 @@ RETURNS TRIGGER AS $$
 BEGIN
     IF NEW.estado = 'pendiente' THEN
         INSERT INTO Notificaciones (nombre_usuario_destino, nombre_usuario_origen, tipo)
-        VALUES (NEW.nombre_usuario_2, NEW.nombre_usuario_1, 'solicitud_amistad');
+        VALUES (NEW.nombre_usuario_2, NEW.nombre_usuario_1, 'pendiente');
     END IF;
 
     RETURN NEW;
@@ -200,6 +199,49 @@ AFTER INSERT ON Amistades
 FOR EACH ROW
 EXECUTE FUNCTION trg_notif_solicitud_amistad();
 
+---------------------------------------------------------------
+-- Notificación de nueva publicación (para amigos y grupos)
+---------------------------------------------------------------
+CREATE OR REPLACE FUNCTION trg_notif_nueva_publicacion()
+RETURNS TRIGGER AS $$
+BEGIN
+
+    IF NEW.nombre_grupo IS NULL THEN
+        INSERT INTO Notificaciones (nombre_usuario_destino, nombre_usuario_origen, tipo)
+        SELECT
+            CASE
+                WHEN a.nombre_usuario_1 = NEW.nombre_usuario THEN a.nombre_usuario_2
+                ELSE a.nombre_usuario_1
+            END,
+            NEW.nombre_usuario,
+            'nueva_publicacion_amigo' 
+        FROM Amistades a
+        WHERE
+            NEW.nombre_usuario IN (a.nombre_usuario_1, a.nombre_usuario_2)
+            AND a.estado = 'aceptada';
+    END IF;
+
+    IF NEW.nombre_grupo IS NOT NULL THEN
+        INSERT INTO Notificaciones (nombre_usuario_destino, nombre_usuario_origen, tipo)
+        SELECT
+            ug.nombre_usuario,
+            NEW.nombre_usuario,
+            'nueva_publicacion_grupo' 
+        FROM Usuarios_Grupos ug
+        WHERE
+            ug.nombre_grupo = NEW.nombre_grupo
+            AND ug.nombre_usuario <> NEW.nombre_usuario; 
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER notificar_nueva_publicacion
+AFTER INSERT ON Publicaciones
+FOR EACH ROW
+EXECUTE FUNCTION trg_notif_nueva_publicacion();
+
 
 ---------------------------------------------------------------
 -- Notificación por aceptación de amistad
@@ -209,7 +251,7 @@ RETURNS TRIGGER AS $$
 BEGIN
     IF OLD.estado = 'pendiente' AND NEW.estado = 'aceptada' THEN
         INSERT INTO Notificaciones (nombre_usuario_destino, nombre_usuario_origen, tipo)
-        VALUES (NEW.nombre_usuario_1, NEW.nombre_usuario_2, 'amistad_aceptada');
+        VALUES (NEW.nombre_usuario_1, NEW.nombre_usuario_2, 'aceptada');
     END IF;
 
     RETURN NEW;
