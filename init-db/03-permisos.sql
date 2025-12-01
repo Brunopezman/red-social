@@ -2,10 +2,13 @@
 CREATE ROLE admin_role LOGIN PASSWORD 'admin123';
 
 -- Rol base para usuarios reales
-CREATE ROLE user_role NOINHERIT;
+CREATE ROLE user_role NOLOGIN;
 
 -- Rol para crear schemas en DB
 GRANT CREATE ON DATABASE red_social TO admin_role;
+
+ALTER ROLE admin_role CREATEROLE;
+GRANT user_role TO admin_role WITH ADMIN OPTION;
 
 -- Rol para crear roles
 GRANT USAGE ON SCHEMA public TO admin_role;
@@ -39,31 +42,12 @@ GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO user_role;
 
 GRANT SELECT ON ALL TABLES IN SCHEMA public TO user_role;
 
-GRANT INSERT ON Amistades   TO user_role;
-GRANT INSERT ON Grupos      TO user_role;
-GRANT INSERT ON Usuarios_grupos TO user_role;
-GRANT INSERT ON Mensajes    TO user_role;
-GRANT INSERT ON Videos      TO user_role;
-GRANT INSERT ON Textos      TO user_role;
-GRANT INSERT ON Favoritos   TO user_role;
-GRANT INSERT ON Comentarios TO user_role;
-GRANT INSERT ON Publicaciones TO user_role;
 
-GRANT UPDATE ON Amistades   TO user_role;
-GRANT UPDATE ON Mensajes    TO user_role;
-GRANT UPDATE ON Videos      TO user_role;
-GRANT UPDATE ON Textos      TO user_role;
-GRANT UPDATE ON Favoritos   TO user_role;
-GRANT UPDATE ON Comentarios TO user_role;
-GRANT UPDATE ON Publicaciones TO user_role;
-GRANT UPDATE ON usuarios TO user_role;
+GRANT INSERT ON Amistades, Grupos, Usuarios_grupos, Notificaciones, Mensajes, Videos, Textos, Imagenes, Favoritos, Comentarios, Publicaciones TO user_role;
 
-GRANT DELETE ON Mensajes    TO user_role;
-GRANT DELETE ON Videos      TO user_role;
-GRANT DELETE ON Textos      TO user_role;
-GRANT DELETE ON Favoritos   TO user_role;
-GRANT DELETE ON Comentarios TO user_role;
-GRANT DELETE ON Publicaciones TO user_role;
+GRANT UPDATE ON Amistades, Grupos, Usuarios_grupos, Notificaciones, Mensajes, Videos, Textos, Imagenes, Favoritos, Comentarios, Publicaciones TO user_role;
+
+GRANT DELETE ON Amistades, Grupos, Usuarios_grupos, Notificaciones, Mensajes, Videos, Textos, Imagenes, Favoritos, Comentarios, Publicaciones TO user_role;
 
 -- Admin con control total
 GRANT ALL PRIVILEGES ON ALL TABLES    IN SCHEMA public TO admin_role;
