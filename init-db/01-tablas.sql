@@ -5,7 +5,6 @@ CREATE TABLE IF NOT EXISTS Paises (
     nombre_pais VARCHAR(50) PRIMARY KEY
 );
 
-
 -- ============================================================
 -- TABLA: USUARIOS
 -- ============================================================
