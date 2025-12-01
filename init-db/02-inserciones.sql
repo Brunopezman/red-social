@@ -120,3 +120,14 @@ INSERT INTO Favoritos VALUES
 ('mlopez',1),
 ('jperez',4),
 ('cfernandez',6);
+
+
+--------------------------------------------------------------
+-- CREAR USER Y ROLE
+--------------------------------------------------------------
+INSERT INTO Usuarios (nombre_usuario, email, fecha_de_nacimiento, nombre, apellido, pais)
+VALUES ('ceni', 'valentinoceniceros@gmail.com', '2001-11-11', 'Valentino', 'Ceniceros', 'Argentina');
+
+CREATE ROLE ceni LOGIN IN ROLE user_role PASSWORD 'ceni123';
+
+CREATE ROLE bpezman LOGIN IN ROLE user_role PASSWORD 'bruno123';

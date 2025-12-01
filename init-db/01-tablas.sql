@@ -350,3 +350,25 @@ CREATE TRIGGER trg_notif_publicacion
 AFTER INSERT ON Publicaciones
 FOR EACH ROW
 EXECUTE FUNCTION notif_publicaciones();
+
+
+-- ============================================================
+-- SUMAR AL CREADOR A USUARIOS_GRUPOS AL CREAR UN GRUPO
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION unir_creador_al_grupo()
+RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO Usuarios_Grupos (nombre_usuario, nombre_grupo)
+    VALUES (NEW.id_creador, NEW.nombre_grupo);
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_auto_unir_creador ON Grupos;
+
+CREATE TRIGGER trg_auto_unir_creador
+AFTER INSERT ON Grupos
+FOR EACH ROW
+EXECUTE FUNCTION unir_creador_al_grupo();

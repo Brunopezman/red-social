@@ -1,13 +1,19 @@
 ------------------------------------------------------------
--- 1. ROLES
-------------------------------------------------------------
+CREATE ROLE admin_role LOGIN PASSWORD 'admin123';
 
-CREATE ROLE admin_role SUPERUSER LOGIN PASSWORD 'admin_password';
-
+-- Rol base para usuarios reales
 CREATE ROLE user_role NOINHERIT;
 
+-- Rol para crear schemas en DB
+GRANT CREATE ON DATABASE red_social TO admin_role;
+
+-- Rol para crear roles
+GRANT USAGE ON SCHEMA public TO admin_role;
+GRANT CREATE ON SCHEMA public TO admin_role;
+GRANT user_role TO admin_role WITH ADMIN OPTION;
+
 ------------------------------------------------------------
--- 2. ASIGNAR DUEÑOS
+-- 2. ASIGNAR DUEÑOS (todas las tablas → admin_role)
 ------------------------------------------------------------
 
 ALTER TABLE Paises             OWNER TO admin_role;
@@ -29,10 +35,37 @@ ALTER TABLE Favoritos          OWNER TO admin_role;
 -- 3. PERMISOS BASE
 ------------------------------------------------------------
 
-GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO user_role;
-
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO user_role;
 
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO user_role;
+
+GRANT INSERT ON Amistades   TO user_role;
+GRANT INSERT ON Grupos      TO user_role;
+GRANT INSERT ON Usuarios_grupos TO user_role;
+GRANT INSERT ON Mensajes    TO user_role;
+GRANT INSERT ON Videos      TO user_role;
+GRANT INSERT ON Textos      TO user_role;
+GRANT INSERT ON Favoritos   TO user_role;
+GRANT INSERT ON Comentarios TO user_role;
+GRANT INSERT ON Publicaciones TO user_role;
+
+GRANT UPDATE ON Amistades   TO user_role;
+GRANT UPDATE ON Mensajes    TO user_role;
+GRANT UPDATE ON Videos      TO user_role;
+GRANT UPDATE ON Textos      TO user_role;
+GRANT UPDATE ON Favoritos   TO user_role;
+GRANT UPDATE ON Comentarios TO user_role;
+GRANT UPDATE ON Publicaciones TO user_role;
+GRANT UPDATE ON usuarios TO user_role;
+
+GRANT DELETE ON Mensajes    TO user_role;
+GRANT DELETE ON Videos      TO user_role;
+GRANT DELETE ON Textos      TO user_role;
+GRANT DELETE ON Favoritos   TO user_role;
+GRANT DELETE ON Comentarios TO user_role;
+GRANT DELETE ON Publicaciones TO user_role;
+
+-- Admin con control total
 GRANT ALL PRIVILEGES ON ALL TABLES    IN SCHEMA public TO admin_role;
 GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO admin_role;
 
@@ -326,3 +359,5 @@ CREATE POLICY fav_insert ON Favoritos
 CREATE POLICY fav_delete ON Favoritos
   FOR DELETE TO user_role
   USING (nombre_usuario = session_user);
+
+
