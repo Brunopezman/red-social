@@ -97,7 +97,6 @@ SELECT * FROM Videos;
 
 -- ============================================================
 -- 9) Eliminar una publicación (ejemplo por tipo)
--- Los triggers eliminan automáticamente la fila en Publicaciones.
 -- ============================================================
 
 -- TEXTO
@@ -115,7 +114,6 @@ WHERE id_publicacion = 41;
 
 -- ============================================================
 -- 10) Desregistrar a un usuario
---     ON DELETE CASCADE borra su contenido automáticamente
 -- ============================================================
 DELETE FROM Usuarios
 WHERE nombre_usuario = 'usuario_nuevo';
@@ -147,6 +145,3 @@ LEFT JOIN Publicaciones p ON u.nombre_usuario = p.nombre_usuario
 LEFT JOIN Favoritos f     ON p.id_publicacion = f.id_publicacion
 GROUP BY u.nombre_usuario
 ORDER BY favoritos_totales DESC;
-
-
-

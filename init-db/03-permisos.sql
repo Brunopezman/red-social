@@ -2,14 +2,12 @@
 -- 1. ROLES
 ------------------------------------------------------------
 
--- Rol administrador
 CREATE ROLE admin_role SUPERUSER LOGIN PASSWORD 'admin_password';
 
--- Rol base para usuarios reales
 CREATE ROLE user_role NOINHERIT;
 
 ------------------------------------------------------------
--- 2. ASIGNAR DUEÑOS (todas las tablas → admin_role)
+-- 2. ASIGNAR DUEÑOS
 ------------------------------------------------------------
 
 ALTER TABLE Paises             OWNER TO admin_role;
@@ -31,13 +29,10 @@ ALTER TABLE Favoritos          OWNER TO admin_role;
 -- 3. PERMISOS BASE
 ------------------------------------------------------------
 
--- user_role ahora puede operar sobre tablas bajo las reglas RLS
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO user_role;
 
--- Sin esto, los inserts fallan por identidad/serial
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO user_role;
 
--- Admin con control total
 GRANT ALL PRIVILEGES ON ALL TABLES    IN SCHEMA public TO admin_role;
 GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO admin_role;
 

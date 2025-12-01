@@ -47,7 +47,7 @@ INSERT INTO Usuarios_Grupos VALUES
 
 
 --------------------------------------------------------------
--- SOLICITUDES DE AMISTAD (AUTO NOTIFICAN)
+-- SOLICITUDES DE AMISTAD
 --------------------------------------------------------------
 INSERT INTO Amistades VALUES ('bpezman','mlopez','pendiente');
 INSERT INTO Amistades VALUES ('bpezman','jperez','pendiente');
@@ -56,7 +56,7 @@ INSERT INTO Amistades VALUES ('jperez','cfernandez','pendiente');
 
 
 --------------------------------------------------------------
--- ACEPTAR AMISTADES (GATILLA NOTIFICACIÓN)
+-- ACEPTAR AMISTADES
 --------------------------------------------------------------
 UPDATE Amistades SET estado='aceptada' WHERE nombre_usuario_1='bpezman' AND nombre_usuario_2='mlopez';
 UPDATE Amistades SET estado='aceptada' WHERE nombre_usuario_1='bpezman' AND nombre_usuario_2='jperez';
@@ -65,7 +65,7 @@ UPDATE Amistades SET estado='aceptada' WHERE nombre_usuario_1='jperez' AND nombr
 
 
 --------------------------------------------------------------
--- PUBLICACIONES (SE CREAN SOLAS)
+-- PUBLICACIONES
 --------------------------------------------------------------
 INSERT INTO Imagenes (nombre_usuario, nombre_grupo, url_imagen)
 VALUES ('bpezman', NULL, 'http://imagenes.com/foto1.jpg');

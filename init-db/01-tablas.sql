@@ -1,13 +1,8 @@
--- ============================================================
--- TABLA: PAISES
--- ============================================================
 CREATE TABLE IF NOT EXISTS Paises (
     nombre_pais VARCHAR(50) PRIMARY KEY
 );
 
--- ============================================================
--- TABLA: USUARIOS
--- ============================================================
+
 CREATE TABLE IF NOT EXISTS Usuarios(
     nombre_usuario VARCHAR(100) PRIMARY KEY,
     email VARCHAR(100) UNIQUE NOT NULL CHECK (email LIKE '%_@__%.__%'),
@@ -21,10 +16,6 @@ CREATE TABLE IF NOT EXISTS Usuarios(
     FOREIGN KEY (pais) REFERENCES Paises(nombre_pais)
 );
 
-
--- ============================================================
--- TABLA: GRUPOS
--- ============================================================
 CREATE TABLE IF NOT EXISTS Grupos(
     nombre_grupo VARCHAR(100) PRIMARY KEY,
     id_creador VARCHAR(100) NOT NULL,
@@ -34,10 +25,6 @@ CREATE TABLE IF NOT EXISTS Grupos(
     FOREIGN KEY (id_creador) REFERENCES Usuarios(nombre_usuario)
 );
 
-
--- ============================================================
--- TABLA RELACIÓN: USUARIOS_GRUPOS
--- ============================================================
 CREATE TABLE IF NOT EXISTS Usuarios_Grupos(
     nombre_usuario VARCHAR(100) NOT NULL,
     nombre_grupo VARCHAR(100) NOT NULL,
@@ -48,10 +35,6 @@ CREATE TABLE IF NOT EXISTS Usuarios_Grupos(
     FOREIGN KEY (nombre_grupo) REFERENCES Grupos(nombre_grupo) ON DELETE CASCADE
 );
 
-
--- ============================================================
--- TABLA: PUBLICACIONES (Padre de Textos/Imagenes/Videos)
--- ============================================================
 CREATE TABLE IF NOT EXISTS Publicaciones (
     id_publicacion SERIAL PRIMARY KEY,
     nombre_usuario VARCHAR(100) NOT NULL,
@@ -61,10 +44,6 @@ CREATE TABLE IF NOT EXISTS Publicaciones (
     FOREIGN KEY (nombre_grupo) REFERENCES Grupos(nombre_grupo) ON DELETE CASCADE
 );
 
-
--- ============================================================
--- SUBTABLA: IMAGENES
--- ============================================================
 CREATE TABLE IF NOT EXISTS Imagenes (
     id_publicacion INT PRIMARY KEY,
     nombre_usuario VARCHAR(100) NOT NULL,
@@ -75,10 +54,6 @@ CREATE TABLE IF NOT EXISTS Imagenes (
         ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED
 );
 
-
--- ============================================================
--- SUBTABLA: TEXTOS
--- ============================================================
 CREATE TABLE IF NOT EXISTS Textos (
     id_publicacion INT PRIMARY KEY,
     nombre_usuario VARCHAR(100) NOT NULL,
@@ -89,10 +64,6 @@ CREATE TABLE IF NOT EXISTS Textos (
         ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED
 );
 
-
--- ============================================================
--- SUBTABLA: VIDEOS
--- ============================================================
 CREATE TABLE IF NOT EXISTS Videos (
     id_publicacion INT PRIMARY KEY,
     nombre_usuario VARCHAR(100) NOT NULL,
@@ -105,10 +76,6 @@ CREATE TABLE IF NOT EXISTS Videos (
         ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED
 );
 
-
--- ============================================================
--- TABLA: COMENTARIOS
--- ============================================================
 CREATE TABLE IF NOT EXISTS Comentarios(
     id_comentario SERIAL PRIMARY KEY,
     id_publicacion INT NOT NULL,
@@ -119,10 +86,6 @@ CREATE TABLE IF NOT EXISTS Comentarios(
     FOREIGN KEY (nombre_usuario) REFERENCES Usuarios(nombre_usuario) ON DELETE CASCADE
 );
 
-
--- ============================================================
--- TABLA: AMISTADES
--- ============================================================
 CREATE TABLE IF NOT EXISTS Amistades (
     nombre_usuario_1 VARCHAR(100) NOT NULL,
     nombre_usuario_2 VARCHAR(100) NOT NULL,
@@ -137,16 +100,11 @@ CREATE TABLE IF NOT EXISTS Amistades (
     CHECK (nombre_usuario_1 <> nombre_usuario_2)
 );
 
--- Índice simétrico para evitar duplicados A-B == B-A
 CREATE UNIQUE INDEX IF NOT EXISTS idx_amistad_par_unico ON Amistades (
     LEAST(nombre_usuario_1, nombre_usuario_2),
     GREATEST(nombre_usuario_1, nombre_usuario_2)
 );
 
-
--- ============================================================
--- TABLA: NOTIFICACIONES
--- ============================================================
 CREATE TABLE IF NOT EXISTS Notificaciones (
     id_notificacion SERIAL PRIMARY KEY,
     nombre_usuario_destino VARCHAR(100) NOT NULL,
@@ -164,10 +122,6 @@ CREATE TABLE IF NOT EXISTS Notificaciones (
     FOREIGN KEY (nombre_usuario_origen)  REFERENCES Usuarios(nombre_usuario)
 );
 
-
--- ============================================================
--- TABLA: MENSAJES
--- ============================================================
 CREATE TABLE IF NOT EXISTS Mensajes(
     id_mensaje SERIAL PRIMARY KEY,
     nombre_usuario_emisor VARCHAR(100) NOT NULL,
@@ -180,10 +134,6 @@ CREATE TABLE IF NOT EXISTS Mensajes(
     FOREIGN KEY (nombre_usuario_receptor) REFERENCES Usuarios(nombre_usuario) ON DELETE CASCADE
 );
 
-
--- ============================================================
--- TABLA: FAVORITOS
--- ============================================================
 CREATE TABLE IF NOT EXISTS Favoritos(
     nombre_usuario VARCHAR(100) NOT NULL,
     id_publicacion INT NOT NULL,
@@ -200,7 +150,6 @@ CREATE TABLE IF NOT EXISTS Favoritos(
 -- TRIGGERS Y FUNCIONES
 -- ============================================================
 
-
 -- ============================================================
 -- TRIGGER DE VALIDACIÓN DE FLUJO DE AMISTADES
 -- Solo permitir INSERT en estado 'pendiente'
@@ -210,17 +159,14 @@ CREATE TABLE IF NOT EXISTS Favoritos(
 CREATE OR REPLACE FUNCTION validar_amistad_aceptada()
 RETURNS TRIGGER AS $$
 BEGIN
-    -- INSERT: solo pendiente
     IF TG_OP = 'INSERT' AND NEW.estado <> 'pendiente' THEN
         RAISE EXCEPTION 'Al crear la amistad, solo se permite estado pendiente';
     END IF;
 
-    -- UPDATE: solo desde pendiente
     IF TG_OP = 'UPDATE' AND OLD.estado <> 'pendiente' AND NEW.estado <> OLD.estado THEN
         RAISE EXCEPTION 'El estado de una amistad solo puede cambiar desde ''pendiente''';
     END IF;
 
-    -- Aceptación requiere notificación previa
     IF NEW.estado = 'aceptada' THEN
         IF NOT EXISTS (
             SELECT 1
@@ -322,7 +268,6 @@ RETURNS TRIGGER AS $$
 DECLARE
     nuevo_id INT;
 BEGIN
-    -- Validación: si publica en grupo, debe pertenecer
     IF NEW.nombre_grupo IS NOT NULL THEN
         IF NOT EXISTS (
             SELECT 1
@@ -335,7 +280,6 @@ BEGIN
         END IF;
     END IF;
 
-    -- Crear publicación si es nueva
     INSERT INTO Publicaciones (nombre_usuario, nombre_grupo)
     VALUES (NEW.nombre_usuario, NEW.nombre_grupo)
     RETURNING id_publicacion INTO nuevo_id;
@@ -377,7 +321,6 @@ EXECUTE FUNCTION crear_publicacion_y_validar_grupo();
 CREATE OR REPLACE FUNCTION notif_publicaciones()
 RETURNS TRIGGER AS $$
 BEGIN
-    -- Notificación a amigos
     INSERT INTO Notificaciones (nombre_usuario_destino, nombre_usuario_origen, tipo)
     SELECT
         CASE
@@ -390,7 +333,6 @@ BEGIN
     WHERE a.estado = 'aceptada'
       AND NEW.nombre_usuario IN (a.nombre_usuario_1, a.nombre_usuario_2);
 
-    -- Notificación a grupo
     IF NEW.nombre_grupo IS NOT NULL THEN
         INSERT INTO Notificaciones (nombre_usuario_destino, nombre_usuario_origen, tipo)
         SELECT nombre_usuario, NEW.nombre_usuario, 'nueva_publicacion_grupo'
