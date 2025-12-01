@@ -1,140 +1,152 @@
+-- ============================================================
+-- CONSULTAS DEL TRABAJO PRÁCTICO DE BASE DE DATOS
+-- Red Social - PostgreSQL
+-- ============================================================
+
 
 -- ============================================================
--- CONSULTAS
+-- 1) Registrar un usuario
 -- ============================================================
-
-
----------------------------------------------------------------
--- Registrar un usuario
----------------------------------------------------------------
 INSERT INTO Usuarios (nombre_usuario, email, fecha_de_nacimiento, nombre, apellido, pais)
-VALUES ('ceni', 'valentinoceniceros@gmail.com', '2001-11-11', 'Valentino', 'Ceniceros', 'Argentina');
+VALUES ('usuario_nuevo', 'nuevo@correo.com', '2000-01-01', 'Nuevo', 'Usuario', 'Argentina');
 
-CREATE ROLE ceni LOGIN IN ROLE user_role PASSWORD 'ceni123';
 
----------------------------------------------------------------
--- Listar todos los usuarios
----------------------------------------------------------------
-SELECT nombre_usuario, nombre, apellido, pais
+-- ============================================================
+-- 2) Listar todos los usuarios de la red social
+-- ============================================================
+SELECT *
 FROM Usuarios;
 
----------------------------------------------------------------
--- Listar todas las amistades aceptadas
----------------------------------------------------------------
-SELECT
-    a.nombre_usuario_1,
-    u.nombre AS nombre_1,
-    u.apellido AS apellido_1,
-    a.nombre_usuario_2,
-    u2.nombre AS nombre_2,
-    u2.apellido AS apellido_2
-FROM Amistades a
-JOIN Usuarios u  ON a.nombre_usuario_1 = u.nombre_usuario
-JOIN Usuarios u2 ON a.nombre_usuario_2 = u2.nombre_usuario
-WHERE a.estado = 'aceptada';
 
----------------------------------------------------------------
--- Listar amigos de un usuario en particular
----------------------------------------------------------------
-SELECT
-    u.nombre_usuario,
-    u.nombre,
-    u.apellido,
-    u.pais
-FROM Usuarios u
-WHERE u.nombre_usuario IN (
-    SELECT CASE
-               WHEN a.nombre_usuario_1 = 'bpezman' THEN a.nombre_usuario_2
-               ELSE a.nombre_usuario_1
-           END
-    FROM Amistades a
-    WHERE 'bpezman' IN (a.nombre_usuario_1, a.nombre_usuario_2)
-      AND a.estado = 'aceptada'
-);
+-- ============================================================
+-- 3) Listar todas las amistades de la red social
+-- ============================================================
+SELECT *
+FROM Amistades;
 
----------------------------------------------------------------
--- Listar todos los mensajes
----------------------------------------------------------------
-SELECT * FROM Mensajes;
 
----------------------------------------------------------------
--- Cantidad de usuarios agrupados por país
----------------------------------------------------------------
-SELECT 
-    pais,
-    COUNT(*) AS cantidad_usuarios
+-- ============================================================
+-- 4) Listar los amigos de un usuario particular
+-- ============================================================
+SELECT *
+FROM amistades AS a
+WHERE nombre_usuario_1 = 'lauti';
+
+
+-- ============================================================
+-- 5) Listar todos los mensajes de la red social
+-- ============================================================
+SELECT *
+FROM Mensajes
+ORDER BY fecha_de_envio DESC;
+
+
+-- ============================================================
+-- 6) Contabilizar la cantidad de usuarios agrupados por país
+-- ============================================================
+SELECT pais, COUNT(*) AS cantidad_usuarios
 FROM Usuarios
 GROUP BY pais
 ORDER BY cantidad_usuarios DESC;
 
 
----------------------------------------------------------------
--- Ejemplos de publicación
----------------------------------------------------------------
-INSERT INTO Textos (id_publicacion, nombre_usuario, texto)
-VALUES (20, 'bpezman', '¡Hola a todos! Primera publicación.');
+-- ============================================================
+-- 7) Realizar una publicación (1 por cada tipo)
+-- Los triggers generan automáticamente la fila en Publicaciones
+-- ============================================================
 
-INSERT INTO Imagenes (id_publicacion, nombre_usuario, url_imagen)
-VALUES (21, 'mlopez', 'http://imagenes.com/ejemplo.jpg');
+-- TEXTO
+INSERT INTO Textos (nombre_usuario, nombre_grupo, texto)
+VALUES ('bpezman', NULL, 'Publicación de ejemplo en texto');
 
-INSERT INTO Videos (id_publicacion, nombre_usuario, url_video, duracion, calidad)
-VALUES (22, 'jperez', 'http://videos.com/video.mp4', 5, '720p');
+-- IMAGEN
+INSERT INTO Imagenes (nombre_usuario, nombre_grupo, url_imagen)
+VALUES ('mlopez', 'Fotografía', 'http://imagenes.com/ejemplo.jpg');
+
+-- VIDEO
+INSERT INTO Videos (nombre_usuario, nombre_grupo, url_video, duracion, calidad)
+VALUES ('jperez', NULL, 'http://videos.com/ejemplo.mp4', 5, '720p');
 
 
----------------------------------------------------------------
--- Actualizar publicaciones
----------------------------------------------------------------
+-- ============================================================
+-- 8) Actualizar una publicación (un ejemplo por tipo)
+-- ============================================================
+
+-- TEXTO
 UPDATE Textos
-SET texto = 'Texto actualizado.'
-WHERE id_publicacion = 20;
+SET texto = 'Texto actualizado'
+WHERE id_publicacion = 39;
 
+SELECT * FROM textos;
+
+-- IMAGEN
 UPDATE Imagenes
-SET url_imagen = 'http://imagenes.com/actualizada.jpg'
-WHERE id_publicacion = 21;
+SET url_imagen = 'http://imagenes.com/modificada.jpg'
+WHERE id_publicacion = 40;
 
+SELECT * FROM Imagenes;
+
+-- VIDEO
 UPDATE Videos
-SET url_video = 'http://videos.com/video_nuevo.mp4',
-    duracion = 6,
+SET duracion = 9,
     calidad = '1080p'
-WHERE id_publicacion = 22;
+WHERE id_publicacion = 41;
 
 
----------------------------------------------------------------
--- Eliminar publicaciones
----------------------------------------------------------------
-DELETE FROM Textos   WHERE id_publicacion = 20;
-DELETE FROM Imagenes WHERE id_publicacion = 21;
-DELETE FROM Videos   WHERE id_publicacion = 22;
+SELECT * FROM Videos;
+
+-- ============================================================
+-- 9) Eliminar una publicación (ejemplo por tipo)
+-- Los triggers eliminan automáticamente la fila en Publicaciones.
+-- ============================================================
+
+-- TEXTO
+DELETE FROM Textos
+WHERE id_publicacion = 3;
+
+-- IMAGEN
+DELETE FROM Imagenes
+WHERE id_publicacion = 40;
+
+-- VIDEO
+DELETE FROM Videos
+WHERE id_publicacion = 41;
 
 
----------------------------------------------------------------
--- Desregistrar a un usuario de la aplicación
----------------------------------------------------------------
-DELETE FROM Usuarios WHERE nombre_usuario = 'mlopez';
+-- ============================================================
+-- 10) Desregistrar a un usuario
+--     ON DELETE CASCADE borra su contenido automáticamente
+-- ============================================================
+DELETE FROM Usuarios
+WHERE nombre_usuario = 'usuario_nuevo';
 
-
----------------------------------------------------------------
--- Publicaciones más populares
----------------------------------------------------------------
+SELECT * FROM usuarios;
+-- ============================================================
+-- 11) Mostrar publicaciones más populares
+--     Según cantidad de favoritos
+-- ============================================================
 SELECT
     p.id_publicacion,
-    COUNT(f.id_publicacion) AS cantidad_favoritos,
-    p.nombre_usuario
+    p.nombre_usuario,
+    COUNT(f.id_publicacion) AS cantidad_favoritos
 FROM Publicaciones p
 LEFT JOIN Favoritos f ON p.id_publicacion = f.id_publicacion
 GROUP BY p.id_publicacion, p.nombre_usuario
 ORDER BY cantidad_favoritos DESC;
 
----------------------------------------------------------------
--- Usuarios más populares por favoritos
----------------------------------------------------------------
+
+-- ============================================================
+-- 12) Mostrar usuarios más populares
+--     Según cuántos favoritos reciben sus publicaciones
+-- ============================================================
 SELECT
     u.nombre_usuario,
-    u.nombre,
-    u.apellido,
-    COUNT(f.id_publicacion) AS total_favoritos
+    COUNT(f.id_publicacion) AS favoritos_totales
 FROM Usuarios u
-JOIN Publicaciones p ON u.nombre_usuario = p.nombre_usuario
-LEFT JOIN Favoritos f ON p.id_publicacion = f.id_publicacion
-GROUP BY u.nombre_usuario, u.nombre, u.apellido
-ORDER BY total_favoritos DESC;
+LEFT JOIN Publicaciones p ON u.nombre_usuario = p.nombre_usuario
+LEFT JOIN Favoritos f     ON p.id_publicacion = f.id_publicacion
+GROUP BY u.nombre_usuario
+ORDER BY favoritos_totales DESC;
+
+
+
