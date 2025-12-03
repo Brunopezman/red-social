@@ -12,6 +12,8 @@ tp-bdd/
 ├── init-db/
 │   ├── 01-tablas.sql
 │   └── 02-inserciones.sql
+│   └── 03-permisos.sql
+│   └── 04-consultas.sql
 ├── informe.pdf
 └── README.md
 ```
