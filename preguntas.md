@@ -3,11 +3,11 @@
 ## MODELO 1
 
 **1. Dado el siguiente caso de estudio: En una empresa de servicios de limpieza en alutra se tiene informacion acerca de los tipos de servicios brindados y de los clientes. Tambien se almacenan servicios que tiene contratado cada cliente con la empresa y la frecuencia de ejecucion de cada servicio.**
-    - ***Definir tablas y atributos ***
-    - ***Definir la estructura en una base de datos relacional***
-    - ***Que indices utilizaria. justificar. ***
-    - ***Definir la estructura en una base de datos no relacional.*** 
-    - ***Definir dimensiones y hechos para armar un DataWarehousing ***
+- Definir tablas y atributos
+- Definir la estructura en una base de datos relacional
+- Que indices utilizaria. justificar.
+- Definir la estructura en una base de datos no relacional. 
+- Definir dimensiones y hechos para armar un DataWarehousing
 
 Clientes: razon_social PK, cuit, direccion, telefono, email
 
@@ -54,12 +54,12 @@ Para estructurar la base NoSQL, creo un unico documento de clientes, y por cada 
 db.createCollection("Clientes");
 ```
 
-Vamos a definir como HECHO principal a ClientesServicios y a las dimensiones como Cliente, TipoServicio, fecha, estado
+Vamos a definir como HECHO principal a ServicioContratado cuya medida sera monto_facturado y a las dimensiones como Cliente, TipoServicio, fecha, estado.
 
 ```mermaid
     %%{init: {'theme': 'redux'}}%%
     flowchart TB
-        A(["estado"]) & D(["fecha"]) & E(["TipoServicio"]) --- B["ClientesServicios"]
+        A(["estado"]) & D(["fecha"]) & E(["TipoServicio"]) --- B["ServicioContratado"]
         B --- C(["Clientes"]) 
 
         %% Definición de estilo: círculo con borde punteado
@@ -71,12 +71,12 @@ Vamos a definir como HECHO principal a ClientesServicios y a las dimensiones com
 
 **2. Dar un ejemplo de un atributo o un conjunto de atributos que sea PK y FK a la vez.**          
 
-En el ejercicio 1, tenemos como ejemplo a razon_social_cliente y nombre_servicio dado que ademas de ser PK y FK de ClientesServicios, son PK de Clientes y Servicios respectivamente. Esto se debe a que la cardinalidad entre dichas entidades es N:M por lo que la tabla generada para cubrir dicha relacion contiene la PK de Clientes y la PK de Servicios.
+Supongamos la entidad empleado y su especializacion gerente. DNI es la PK de empleado por lo que gerente la va a heredar como PK que su vez sera tambien su FK que referencia a Empleado.
 
 **3. Explicar el concepto de recuperacion de base de datos de forma resumida.**      
 
 La recuperacion de base de datos es el proceso mediante el cual una base de datos vuelve a un estado consistente despues de cualquier tipo de falla. Se basa principalmente en:
-- Logs(registros de transacciones): Guardan cada cambio antes de aplicarse
+- Logs(registros de transacciones): Guardan cada cambio antes de aplicarse (WAL)
 - Transacciones: Se aseguran que cada operacion sea atomica.
 - Mecanismos UNDO y REDO: Se deshacen transacciones que no se completaron al momento de la falla y se rehacen transacciones que ya estaban commiteadas pero sus cambios no llegaron a escribirse en el disco.
 - Checkpoints: Puntos de guardado que facilitan la recuperacion rapida.
