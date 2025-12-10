@@ -2,33 +2,89 @@
 
 ## MODELO 1
 
-### Costos y Optimización de Consultas
-Explique el proceso que realiza un Optimizador de Consultas en un SGBD para pasar de una consulta SQL al Plan de Ejecución más eficiente.
+**1. Dado el siguiente caso de estudio: En una empresa de servicios de limpieza en alutra se tiene informacion acerca de los tipos de servicios brindados y de los clientes. Tambien se almacenan servicios que tiene contratado cada cliente con la empresa y la frecuencia de ejecucion de cada servicio.**
+    - ***Definir tablas y atributos ***
+    - ***Definir la estructura en una base de datos relacional***
+    - ***Que indices utilizaria. justificar. ***
+    - ***Definir la estructura en una base de datos no relacional.*** 
+    - ***Definir dimensiones y hechos para armar un DataWarehousing ***
 
-Mencione qué elementos clave utiliza el optimizador para estimar el costo de un plan (e.g., estadísticas, catálogo) y por qué la estimación de costos es fundamental para garantizar un tiempo de respuesta óptimo.
+Clientes: razon_social PK, cuit, direccion, telefono, email
 
-### Recuperación y Log de BD
-Describa en detalle la Regla WAL (Write-Ahead Logging). Explique su propósito en el contexto del gestor de recuperación de la base de datos y cómo garantiza la durabilidad de las transacciones frente a fallas del sistema o del medio de almacenamiento.
+TiposServicios: nombre_servicio PK, descripcion, costo
 
-### Data Warehousing (Tablas de Hechos y Dimensiones)
-Describa la estructura de un modelo de datos en estrella (Star Schema), propio de un Data Warehouse (DW).
+ClientesServicios: razon_social PK FK, nombre_servicio PK FK, frecuencia_ejecucion, fecha, estado
 
-Defina las Tablas de Hechos (Fact Tables) y las Tablas de Dimensiones (Dimension Tables), indicando las diferencias en el tipo de datos que almacena cada una (e.g., claves, medidas, atributos descriptivos).
+```sql
+    CREATE TABLE Clientes (
+        razon_social VARCHAR(50) PRIMARY KEY,
+        cuit VARCHAR(20) NOT NULL UNIQUE,
+        telefono INT,
+        email VARCHAR(50)
+    )
 
-Mencione y ejemplifique tres (3) operaciones típicas de OLAP (Online Analytical Processing).
+    CREATE TABLE TiposServicios (
+        nombre VARCHAR(50) PRIMARY KEY,
+        descripcion VARCHAR(100) NOT NULL,
+        costo DECIMAL(10,2) NOT NULL
+    )
 
-### Transacciones y Propiedades ACID
-Describa y ejemplifique el problema de Lectura Sucia (Dirty Read).
+    CREATE TABLE ClientesServicios (
+        razon_social_cliente VARCHAR(50) NOT NULL,
+        nombre_servicio VARCHAR(50) NOT NULL ,
+        frecuencia_ejecucion VARCHAR(20) NOT NULL,
+        fecha TIMESTAMP NOT NULL,
+        estado VARCHAR(10) NOT NULL CHECK(estado IN('en proceso', 'finalizado'))
 
-Explique qué propiedad ACID se ve directamente comprometida por esta anomalía.
+        PRIMARY KEY (razon_social_cliente, nombre_servicio),
+        FOREIGN KEY (razon_social_cliente) REFERENCES Clientes(razon_social),
+        FOREIGN KEY (nombre_servicio) REFERENCES TiposServicios(nombre)
+    )
+```
 
-Describa brevemente cómo el Protocolo de Lock de Dos Fases (2PL) evita este tipo de anomalías, especificando en qué fase se obtienen los locks de lectura/escritura.
+Utlizaria los siguientes indices de tipo B+ Tree:
+-  Para la tabla Clientes utilizaria un indice para cuit y para razon social dado que es frecuente buscar clientes por dichos identificadores para facturar o consultarn rapidamente.
+- Para la tabla TiposServicios utilizaria un indice en nombr para acceder rapidamente a los servicios disponibles en la empresa.
+- Para la tabla ClientesServicios utilizaria un indice en razon_social_cliente para acceder rapidamente a todos los servicios contratados por un determinado cliente, y un indice para nombre_servicio dado que se va a necesitar acceder tambien a todos los clientes que contrataron un determinado servicio.
 
-### Pregunta 5: Tipos y Estructuras de Índices
-Describa las diferencias fundamentales entre un Índice Clustered (Agrupado) y un Índice Unclustered (No Agrupado o Secundario).
+Para estructurar la base NoSQL, creo un unico documento de clientes, y por cada agregado, tenemos un atributo ServiciosContratados, el cual sera un arreglo con los servicios que contrato el cliente junto a sus frecuencias de ejecucion.
 
-Explique cómo afecta cada tipo de índice a la organización física de los datos en disco.
 
-Justifique por qué solo puede haber un índice clustered por tabla.
+```javascript
+db.createCollection("Clientes");
+```
 
-Mencione brevemente la estructura más utilizada para implementar estos índices (típicamente, el árbol B+).
+Vamos a definir como HECHO principal a ClientesServicios y a las dimensiones como Cliente, TipoServicio, fecha, estado
+
+```mermaid
+    %%{init: {'theme': 'redux'}}%%
+    flowchart TB
+        A(["estado"]) & D(["fecha"]) & E(["TipoServicio"]) --- B["ClientesServicios"]
+        B --- C(["Clientes"]) 
+
+        %% Definición de estilo: círculo con borde punteado
+        classDef dottedCircle stroke:#333,stroke-width:2px,stroke-dasharray:4 4,fill:#fff;
+
+        %% Aplicar estilo a los nodos deseados
+        class A,D,E,C dottedCircle;
+```
+
+**2. Dar un ejemplo de un atributo o un conjunto de atributos que sea PK y FK a la vez.**          
+
+En el ejercicio 1, tenemos como ejemplo a razon_social_cliente y nombre_servicio dado que ademas de ser PK y FK de ClientesServicios, son PK de Clientes y Servicios respectivamente. Esto se debe a que la cardinalidad entre dichas entidades es N:M por lo que la tabla generada para cubrir dicha relacion contiene la PK de Clientes y la PK de Servicios.
+
+**3. Explicar el concepto de recuperacion de base de datos de forma resumida.**      
+
+La recuperacion de base de datos es el proceso mediante el cual una base de datos vuelve a un estado consistente despues de cualquier tipo de falla. Se basa principalmente en:
+- Logs(registros de transacciones): Guardan cada cambio antes de aplicarse
+- Transacciones: Se aseguran que cada operacion sea atomica.
+- Mecanismos UNDO y REDO: Se deshacen transacciones que no se completaron al momento de la falla y se rehacen transacciones que ya estaban commiteadas pero sus cambios no llegaron a escribirse en el disco.
+- Checkpoints: Puntos de guardado que facilitan la recuperacion rapida.
+
+**4. Explicar brevemente los conceptos de consistencia y disponibilidad en bases de datos distribuidas.**
+
+La consistencia es la propiedad de que, despues de cualquier operacion, todos los nodos del sistema vean el mismo dato actualizado al mismo tiempo.
+
+La disponibilidad es la garantia de que cada solicitud realizada a un nodo que no ha fallado recibe una respuesta, sin importar el estado de otros nodos.
+
+Como el sistema en la practica debe ser tolearante a fallas, se busca una solucion de compromiso entre consistencia y disponibilidad.
