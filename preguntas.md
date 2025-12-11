@@ -21,13 +21,13 @@ ClientesServicios: razon_social PK FK, nombre_servicio PK FK, frecuencia_ejecuci
         cuit VARCHAR(20) NOT NULL UNIQUE,
         telefono INT,
         email VARCHAR(50)
-    )
+    );
 
     CREATE TABLE TiposServicios (
         nombre VARCHAR(50) PRIMARY KEY,
         descripcion VARCHAR(100) NOT NULL,
         costo DECIMAL(10,2) NOT NULL
-    )
+    );
 
     CREATE TABLE ClientesServicios (
         razon_social_cliente VARCHAR(50) NOT NULL,
@@ -39,7 +39,7 @@ ClientesServicios: razon_social PK FK, nombre_servicio PK FK, frecuencia_ejecuci
         PRIMARY KEY (razon_social_cliente, nombre_servicio),
         FOREIGN KEY (razon_social_cliente) REFERENCES Clientes(razon_social),
         FOREIGN KEY (nombre_servicio) REFERENCES TiposServicios(nombre)
-    )
+    );
 ```
 
 Utlizaria los siguientes indices de tipo B+ Tree:
