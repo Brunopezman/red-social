@@ -1,4 +1,4 @@
-# TP - Base de Datos (BDD)
+# Base de Datos (BDD)
 
 Este repositorio contiene la configuración y los scripts necesarios para levantar una base de datos de una Red Social con PostgreSQL mediante Docker, con la inicialización automática de las tablas y los datos.
 
@@ -8,13 +8,15 @@ Este repositorio contiene la configuración y los scripts necesarios para levant
 tp-bdd/
 ├── Dockerfile
 ├── docker-compose.yml
-├── psql.sh 
+├── enunciadoTP.pdf
 ├── init-db/
 │   ├── 01-tablas.sql
 │   └── 02-inserciones.sql
 │   └── 03-permisos.sql
 │   └── 04-consultas.sql
-├── informe.pdf
+├── preguntas.md
+├── modeloRelacional.md
+├── psql.sh 
 └── README.md
 ```
 
@@ -25,6 +27,8 @@ tp-bdd/
 - **psql.sh** → Script que construye la imagen, levanta el contenedor y prepara la base de datos.  
 - **init-db/** → Contiene los scripts SQL que se ejecutan automáticamente al iniciar el contenedor.  
 - **informe.pdf** → Informe del trabajo práctico.  
+- **modeloRelacional.md** 
+- **preguntas.mdd** → Practica para final
 
 ---
 

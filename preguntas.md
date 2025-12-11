@@ -88,3 +88,118 @@ La consistencia es la propiedad de que, despues de cualquier operacion, todos lo
 La disponibilidad es la garantia de que cada solicitud realizada a un nodo que no ha fallado recibe una respuesta, sin importar el estado de otros nodos.
 
 Como el sistema en la practica debe ser tolearante a fallas, se busca una solucion de compromiso entre consistencia y disponibilidad.
+
+## MODELO 2
+
+1. **Dado el siguiente caso de estudio: Una plataforma de comercio electrónico vende productos (físicos o digitales) a clientes. Se registran las ventas realizadas, el detalle de los ítems de cada pedido y los métodos de pago utilizados. Se necesita almacenar también la información de los repartidores/logística para los productos físicos.**
+- Definir tablas y atributos
+- Definir la estructura en una base de datos relacional
+- Que indices utilizaria. justificar.
+- Definir la estructura en una base de datos no relacional. 
+- Definir dimensiones y hechos para armar un DataWarehousing
+
+Clientes: dni_cliente PK, nombre, telefono, email
+
+Productos: codigo_producto PK, nombre, descripcion, tipo, precio 
+
+Ventas: codigo_venta PK, dni_cliente FK, dni_repartidor FK, monto, fecha, metodo_pago
+
+ItemsVenta: codigo_venta PK FK, codigo_producto PK FK, cantidad     
+
+Repartidores: dni_repartidor PK, salario, fecha_ingreso
+
+```sql
+    CREATE TABLE Clientes (
+        dni_cliente CHAR(8) PRIMARY KEY,
+        nombre VARCHAR(50),
+        telefono INT,
+        email VARCHAR(50)
+    );
+
+    CREATE TABLE Productos (
+        codigo_producto VARCHAR(10) PRIMARY KEY,
+        nombre VARCHAR(50),
+        descripcion VARCHAR(100),
+        tipo VARCHAR(10) NOT NULL CHECK (tipo in ('fisico', 'digital')),
+        precio DECIMAL(10,2)
+    );
+
+
+    CREATE TABLE Repartidores (
+        dni_repartidor CHAR(8) PRIMARY KEY,
+        nombre VARCHAR(50) NOT NULL,
+        salario DECIMAL(10,2) NOT NULL,
+        fecha_ingreso DATE NOT NULL
+    );
+
+    CREATE TABLE Ventas (
+        codigo_venta VARCHAR(10) PRIMARY KEY,
+        dni_cliente CHAR(8) NOT NULL,
+        dni_repartidor CHAR(8) NOT NULL,
+        fecha DATE NOT NULL,
+        monto DECIMAL(10,2) NOT NULL,
+        metodo_pago VARCHAR(20) NOT NULL,
+
+        FOREIGN KEY (dni_cliente) REFERENCES Clientes(dni_cliente),
+        FOREIGN KEY (dni_repartidor) REFERENCES Repartidores(dni_repartidor)
+    );
+
+    CREATE TABLE ItemsVenta (
+        codigo_venta VARCHAR(10) NOT NULL,
+        codigo_producto VARCHAR(10) NOT NULL,
+        cantidad INT
+
+        PRIMARY KEY (codigo_venta, codigo_producto),
+        FOREIGN KEY (codigo_venta) REFERENCES Ventas(codigo_venta),
+        FOREIGN KEY (codigo_producto) REFERENCES Productos(codigo_producto)
+    );
+```
+
+Vamos a utilizar los siguientes indices de tipo B+ Trees:
+- Para ventas: 
+    - un indice en dni_cliente para obtener las ventas que realizo determinado cliente
+    - un indice en fecha para obtener las ventas de una fecha determinada
+
+Para estructurar la base NoSQL, vamos a crear un unico documento Pedidos el cual cada agregado tendra los atributos codigo_venta, dni_cliente, dni_repartidor, monto, metodo_pago y un array items que contendra el codigo de cada producto con su respectiva cantidad y precio.
+
+```javascript
+db.createCollecion("Pedidos");
+```
+
+Vamos a definir como HECHO a Ventas cuyas medidas seran monto y cantidad_productos, y a las dimensiones como cliente, producto y repartidor
+
+```mermaid
+    %%{init: {'theme': 'redux'}}%%
+    flowchart TB
+        A(["Cliente"]) & D(["Producto"]) --- B["Ventas"]
+        B --- C(["Repartidor"]) 
+
+        %% Definición de estilo: círculo con borde punteado
+        classDef dottedCircle stroke:#333,stroke-width:2px,stroke-dasharray:4 4,fill:#fff;
+
+        %% Aplicar estilo a los nodos deseados
+        class A,C,D dottedCircle;
+```
+
+2. ***Describa la función del Grafo de Precedencias en el control de concurrencia.***
+    - Defina qué representa un Nodo y qué representa una Arista en este grafo.
+    - Explique cómo se utiliza el grafo para determinar si una historia de ejecución concurrente es Serializable.
+
+El grafo de precedencias permite evaluar la serializabilidad por conflictos. Cada nodo representa una transaccion ti. Se agrega una arista entre ti y tj si existe un conflicto: W-R, R-W, o W-W. Cada arista representa una precedencia entre ti y tj. Para que el resultado sea equivalente por conflictos a una ejecucion serial, ti debe preceder a tj. Un orden de ejecucion es SERIALIZABLE por conflictos si su grafo de precedencias no tiene ciclos.
+
+3. ***Explique qué son las Heurísticas de Optimización en el contexto del Optimizador de Consultas.***
+    - Mencione la heurística más importante para la cláusula WHERE (Selección) y explique su efecto   sobre la eficiencia del plan de ejecución (costo).
+    - Mencione la heurística más importante para la cláusula JOIN (Productos Cartesianos) y justifique por qué se aplica.
+
+
+Las heuristicas de optimizacion son maneras de ejecutar las consultas de manera que minimicemos el costo de acceder a disco. 
+
+Para la clausula WHERE hay que seleccionar lo antes posible (lo más abajo posible en el árbol de consultas) para obtener la menor cantidad de tuplas para luego usar eso en futuras operaciones de manera de reducir el costo futuro. Para JOIN debemos evitar productos cartesianos cuando sea posible y cambiar productos cartesianos con selecciones, por juntas.
+
+4. ***El Teorema CAP define un compromiso entre Consistencia, Disponibilidad y Tolerancia a Particiones.***
+    - Describa el concepto de Tolerancia a Particiones (P) y por qué es un requisito no negociable en un sistema distribuido.
+    - Defina la Consistencia Eventual (Eventual Consistency) y explique en qué situación se prefiere este modelo de consistencia (CP o AP) según el Teorema CAP.
+
+La tolerancia a particiones es la cualidad de un sistema para responder una consulta aun cuando algunas conexiones entre algunos pares de nodos esten caidas. En la práctica, dado que no se pueden evitar las fallas de red, un sistema distribuido debe priorizar la Tolerancia a Particiones para seguir funcionando. 
+
+La consistencia eventual ocurre cuando se dejan de producir actualizaciones en los nodos, por lo que eventualmente todos los nodos replica alcanzaran el mismo estado. En el modelo AP, la Consistencia Eventual es el compromiso necesario que permite al sistema mantener la Disponibilidad a expensas de la Consistencia inmediata durante una falla de red.
