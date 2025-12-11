@@ -34,7 +34,7 @@ ClientesServicios: razon_social PK FK, nombre_servicio PK FK, frecuencia_ejecuci
         nombre_servicio VARCHAR(50) NOT NULL ,
         frecuencia_ejecucion VARCHAR(20) NOT NULL,
         fecha TIMESTAMP NOT NULL,
-        estado VARCHAR(10) NOT NULL CHECK(estado IN('en proceso', 'finalizado'))
+        estado VARCHAR(10) NOT NULL CHECK(estado IN('en proceso', 'finalizado')),
 
         PRIMARY KEY (razon_social_cliente, nombre_servicio),
         FOREIGN KEY (razon_social_cliente) REFERENCES Clientes(razon_social),
@@ -147,7 +147,7 @@ Repartidores: dni_repartidor PK, salario, fecha_ingreso
     CREATE TABLE ItemsVenta (
         codigo_venta VARCHAR(10) NOT NULL,
         codigo_producto VARCHAR(10) NOT NULL,
-        cantidad INT
+        cantidad INT,
 
         PRIMARY KEY (codigo_venta, codigo_producto),
         FOREIGN KEY (codigo_venta) REFERENCES Ventas(codigo_venta),
