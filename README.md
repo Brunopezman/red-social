@@ -9,6 +9,7 @@ tp-bdd/
 ├── Dockerfile
 ├── docker-compose.yml
 ├── enunciadoTP.pdf
+├── resumenFinal.pdf
 ├── init-db/
 │   ├── 01-tablas.sql
 │   └── 02-inserciones.sql
