@@ -1,4 +1,4 @@
-# Base de Datos (BDD)
+# Red Social - SQL, PostgreSQL, Docker
 
 Este repositorio contiene la configuración y los scripts necesarios para levantar una base de datos de una Red Social con PostgreSQL mediante Docker, con la inicialización automática de las tablas y los datos.
 
