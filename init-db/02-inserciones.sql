@@ -24,27 +24,24 @@ VALUES
 -- GRUPOS
 --------------------------------------------------------------
 INSERT INTO Grupos (nombre_grupo, id_creador, descripcion) VALUES
-('Fotografía',        'bpezman',    'Grupo para compartir fotos'),
+('fotografia',        'bpezman',    'Grupo para compartir fotos'),
 ('Cocina Creativa',   'mlopez',     'Recetas y platos'),
 ('Viajes y Aventuras','jperez',     'Experiencias alrededor del mundo');
-
 
 --------------------------------------------------------------
 -- USUARIOS EN GRUPOS
 --------------------------------------------------------------
 INSERT INTO Usuarios_Grupos VALUES
-('bpezman', 'Fotografía'),
-('mlopez', 'Fotografía'),
-('arodriguez', 'Fotografía'),
-
+('bpezman', 'fotografia'),
 ('mlopez', 'Cocina Creativa'),
+('jperez', 'Viajes y Aventuras'),
+('arodriguez', 'fotografia'),
 ('jperez', 'Cocina Creativa'),
 ('cfernandez', 'Cocina Creativa'),
-
+('mlopez', 'fotografia'),
 ('bpezman', 'Viajes y Aventuras'),
-('jperez', 'Viajes y Aventuras'),
-('cfernandez', 'Viajes y Aventuras');
-
+('cfernandez', 'Viajes y Aventuras') 
+ON CONFLICT DO NOTHING;
 
 --------------------------------------------------------------
 -- SOLICITUDES DE AMISTAD
@@ -71,13 +68,13 @@ INSERT INTO Imagenes (nombre_usuario, nombre_grupo, url_imagen)
 VALUES ('bpezman', NULL, 'http://imagenes.com/foto1.jpg');
 
 INSERT INTO Imagenes (nombre_usuario, nombre_grupo, url_imagen)
-VALUES ('mlopez', 'Fotografía', 'http://imagenes.com/foto_grupo.jpg');
+VALUES ('mlopez', 'fotografia', 'http://imagenes.com/foto_grupo.jpg');
 
 INSERT INTO Textos (nombre_usuario, nombre_grupo, texto)
 VALUES ('jperez', NULL, 'Hoy comencé a estudiar SQL');
 
 INSERT INTO Textos (nombre_usuario, nombre_grupo, texto)
-VALUES ('arodriguez', 'Cocina Creativa', 'Nueva receta riquísima');
+VALUES ('cfernandez', 'Cocina Creativa', 'Nueva receta riquísima');
 
 
 --------------------------------------------------------------
@@ -87,7 +84,7 @@ INSERT INTO Videos (nombre_usuario, nombre_grupo, url_video, duracion, calidad)
 VALUES ('cfernandez', NULL, 'http://videos.com/clip.mp4', 5, '720p');
 
 INSERT INTO Videos (nombre_usuario, nombre_grupo, url_video, duracion, calidad)
-VALUES ('mlopez', 'Viajes y Aventuras', 'http://videos.com/travel.mp4', 7, '1080p');
+VALUES ('mlopez', 'fotografia', 'http://videos.com/travel.mp4', 7, '1080p');
 
 
 --------------------------------------------------------------
@@ -120,14 +117,3 @@ INSERT INTO Favoritos VALUES
 ('mlopez',1),
 ('jperez',4),
 ('cfernandez',6);
-
-
---------------------------------------------------------------
--- CREAR USER Y ROLE
---------------------------------------------------------------
-INSERT INTO Usuarios (nombre_usuario, email, fecha_de_nacimiento, nombre, apellido, pais)
-VALUES ('ceni', 'valentinoceniceros@gmail.com', '2001-11-11', 'Valentino', 'Ceniceros', 'Argentina');
-
-CREATE ROLE ceni LOGIN IN ROLE user_role PASSWORD 'ceni123';
-
-CREATE ROLE bpezman LOGIN IN ROLE user_role PASSWORD 'bruno123';
