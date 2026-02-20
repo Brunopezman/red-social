@@ -186,7 +186,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_validar_amistad_aceptada ON Amistades;
+
 CREATE TRIGGER trg_validar_amistad_aceptada
 BEFORE INSERT OR UPDATE ON Amistades
 FOR EACH ROW
@@ -206,7 +206,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_notif_solicitud_amistad ON Amistades;
 CREATE TRIGGER trg_notif_solicitud_amistad
 AFTER INSERT ON Amistades
 FOR EACH ROW
@@ -228,7 +227,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_notif_aceptacion_amistad ON Amistades;
 CREATE TRIGGER trg_notif_aceptacion_amistad
 AFTER UPDATE ON Amistades
 FOR EACH ROW
@@ -250,7 +248,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_notif_rechazo_amistad ON Amistades;
 CREATE TRIGGER trg_notif_rechazo_amistad
 AFTER UPDATE ON Amistades
 FOR EACH ROW
@@ -291,7 +288,6 @@ $$ LANGUAGE plpgsql;
 
 
 -- TEXTOS
-DROP TRIGGER IF EXISTS trg_textos_publicacion ON Textos;
 CREATE TRIGGER trg_textos_publicacion
 BEFORE INSERT ON Textos
 FOR EACH ROW
@@ -299,7 +295,6 @@ EXECUTE FUNCTION crear_publicacion_y_validar_grupo();
 
 
 -- IMAGENES
-DROP TRIGGER IF EXISTS trg_imagen_publicacion ON Imagenes;
 CREATE TRIGGER trg_imagen_publicacion
 BEFORE INSERT ON Imagenes
 FOR EACH ROW
@@ -307,13 +302,10 @@ EXECUTE FUNCTION crear_publicacion_y_validar_grupo();
 
 
 -- VIDEOS
-DROP TRIGGER IF EXISTS trg_video_publicacion ON Videos;
 CREATE TRIGGER trg_video_publicacion
 BEFORE INSERT ON Videos
 FOR EACH ROW
 EXECUTE FUNCTION crear_publicacion_y_validar_grupo();
-
-
 
 -- ============================================================
 -- NOTIFICAR PUBLICACIÓN A AMIGOS Y MIEMBROS DEL GRUPO
@@ -345,7 +337,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_notif_publicacion ON Publicaciones;
 CREATE TRIGGER trg_notif_publicacion
 AFTER INSERT ON Publicaciones
 FOR EACH ROW
@@ -365,8 +356,6 @@ BEGIN
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-
-DROP TRIGGER IF EXISTS trg_auto_unir_creador ON Grupos;
 
 CREATE TRIGGER trg_auto_unir_creador
 AFTER INSERT ON Grupos
