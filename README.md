@@ -1,6 +1,6 @@
 # Red Social - SQL, PostgreSQL, Docker
 
-Este proyecto implementa la base de datos de una Red Social utilizando PostgreSQL y Docker. El sistema cuenta con una arquitectura de roles (Admin y User), triggers de validación automática y una estructura diseñada para la escalabilidad.
+Este proyecto implementa la base de datos de una Red Social utilizando PostgreSQL y Docker. El sistema cuenta con una arquitectura de roles, triggers de validación automática y una estructura diseñada para la escalabilidad.
 
 ### ✍️ Autor
 
