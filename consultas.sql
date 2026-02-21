@@ -75,7 +75,7 @@ VALUES ('jperez', NULL, 'http://videos.com/ejemplo.mp4', 5, '720p');
 -- TEXTO
 UPDATE Textos
 SET texto = 'Texto actualizado'
-WHERE id_publicacion = 39;
+WHERE id_publicacion = 3;
 
 SELECT * FROM textos;
 
