@@ -11,9 +11,9 @@ Trabajo realizado por Bruno Pezman, Valentino Ceniceros, Camila Mantilla, Lautar
 ```
 tp-bdd/
 ├── init-db/                # Scripts de inicialización automática
-│   ├── 01-tablas.sql       # Esquema, triggers y funciones
-│   ├── 02-inserciones.sql  # Carga de datos iniciales (Seed)
-│   ├── 03-roles.sql        # Roles de acceso con permisos granulados
+│   ├── 01-roles.sql        # Roles de acceso con permisos granulados
+│   ├── 02-tablas.sql       # Esquema, triggers y funciones
+│   ├── 03-inserciones.sql  # Carga de datos iniciales (Seed)
 │   └── 04-permisos.sql     # Configuración de roles y privilegios
 ├── consultas.sql           # Consultas requeridas por el TP
 ├── preguntas.md            # Material de práctica para el examen
@@ -55,25 +55,32 @@ Nota: Al iniciar, Docker ejecutará automáticamente los scripts dentro de init-
 3. Acceso mediante Roles
 Para interactuar con la base de datos, utiliza los siguientes comandos según el perfil de acceso:
 
-Perfil Administrador (admin_role)
-Tiene control total sobre el esquema y los datos.
+Perfil Desarrollador (Acceso Total)
+Ideal para mantenimiento, pruebas en SQLTools y cambios en el esquema. Tiene todos los privilegios sobre el esquema público.
 
 ```Bash
-docker exec -it red_social_db psql -U admin_role -d red_social
+docker exec -it red_social_db psql -U developer -d red_social_db
 ```
 
-Perfil Usuario (user_role)
-Acceso limitado a la interacción social (lectura y creación de contenido).
+Perfil Aplicación (Usuario de App)
+Acceso limitado para el funcionamiento del Backend (DML). Puede consultar, insertar, actualizar y borrar datos en las tablas existentes.(lectura y creación de contenido).
 
 ```bash
-docker exec -it red_social_db psql -U user_role -d red_social
+docker exec -it red_social_db psql -U app_user -d red_social_db
+```
+
+Perfil Solo Lectura
+Para auditorías o reportes rápidos sin riesgo de modificar la información.
+
+```bash
+docker exec -it red_social_db psql -U read_only_user -d red_social_db
 ```
 
 4. Ejecución de Consultas del TP
 Para verificar el funcionamiento y obtener los reportes solicitados en la consigna, puedes ejecutar el archivo externo:
 
 ```Bash
-docker exec -i red_social_db psql -U admin_role -d red_social < consultas.sql
+docker exec -i red_social_db psql -U developer -d red_social_db < consultas.sql
 ```
 
 # 🧠 Notas Técnicas
